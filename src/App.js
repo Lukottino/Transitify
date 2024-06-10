@@ -1,4 +1,6 @@
 import './App.css';
+import Register from './Register';
+import Login from './Login';
 import HomePage from './HomePage';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
@@ -7,9 +9,9 @@ function App() {
     <>
       <Router>
         <Routes>
-          <Route path='/' exact Component={HomePage}/>
-          <Route path='/register' exact Component={Register}/>
-          <Route path='/login' exact Component={Login}/>
+          <Route path='/' element={<HomePage />}/>
+          <Route path='/register' element={<Register />}/>
+          <Route path='/login' element={<Login />}/>
         </Routes>
       </Router>
     </>
