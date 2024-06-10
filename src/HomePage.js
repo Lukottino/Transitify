@@ -1,8 +1,14 @@
 import * as React from 'react';
 import Button from '@mui/material/Button'
-import logo from './logo.svg';
+import { useNavigate } from "react-router-dom";
 
 function HomePage() {
+
+  let navigate = useNavigate(); 
+  const routeChange = (path) =>{ 
+    navigate(path);
+  }
+
   return (
     <>
       <div style={{backgroundColor: "black", 
@@ -27,9 +33,9 @@ function HomePage() {
                               alignItems:"right",
                               justifyContent:"right",
                               marginLeft:"7px"}}>
-                    <Button variant='outlined' style={{color:"white", borderColor:"white", height:"100%px", borderRadius:"20px"}}>Login</Button>
+                    <Button variant='outlined' onClick={() => routeChange("/login")} style={{color:"white", borderColor:"white", height:"100%px", borderRadius:"20px"}}>Login</Button>
                     <label style={{textShadow:"black 2px 5px 20px", fontWeight:"500", fontSize:"10px", paddingLeft:"5%"}}>O se non hai un account</label>
-                    <a href='/' style={{textDecoration:"none", textShadow:"black 2px 5px 20px", fontWeight:"500", fontSize:"10px"}}> Registrati</a>
+                    <a href='/register' style={{textDecoration:"none", textShadow:"black 2px 5px 20px", fontWeight:"500", fontSize:"10px"}}> Registrati</a>
                   </div>
               </div>
           </div>

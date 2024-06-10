@@ -8,6 +8,8 @@ function App() {
       <Router>
         <Routes>
           <Route path='/' exact Component={HomePage}/>
+          <Route path='/register' exact Component={Register}/>
+          <Route path='/login' exact Component={Login}/>
         </Routes>
       </Router>
     </>
