@@ -22,7 +22,7 @@ function HomePage() {
               <img style={{objectFit:"cover", height:"100%", width:"100%", filter: "blur(10px)"}} src={require("./resources/trainstationwphomepage.jpg")}></img>
               <div style={{left:"50px", top:"200px", position:"absolute"}}>
                   <h1 style={{textShadow:"black 10px 10px 40px", fontWeight:"bold", fontSize:"80px", marginTop:"-2%"}}>Cos'è Transitify?</h1>
-                  <h6 style={{textShadow:"black 2px 5px 20px", marginTop:"-30px", marginLeft:"10px", fontWeight:"400", width:"40%", fontSize:"20px"}}>Transitify è un sistema innovativo basato
+                  <h6 style={{textShadow:"black 2px 5px 20px", marginLeft:"10px", fontWeight:"400", width:"40%", fontSize:"20px"}}>Transitify è un sistema innovativo basato
                   su carta elettronica con cui puoi viaggiare su bus, treni, metro e tram.
                   Con questo sistema, puoi fare Check-in e Check-out direttamente nelle relative
                   stazioni/fermate, garantendo un viaggio più semplice da gestire.</h6>
