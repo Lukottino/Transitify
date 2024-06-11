@@ -4,7 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'; // Assicurati di importare il CSS
 
 function Login() {
     return (
-        <div className="d-flex justify-content-center align-items-center min-vh-100" style={{ backgroundColor: 'blue' }}>
+        <div className="d-flex justify-content-center align-items-center min-vh-100" style={{ backgroundColor: 'white' }}>
             <Card className="border rounded shadow" style={{ width: '20rem', padding: '30px', borderColor: '#ddd', borderWidth: '1px' }}>
                 <Card.Body>
                     <Card.Title className="text-center mb-4" style={{ fontWeight: 'bold', fontSize: '1.5rem' }}>

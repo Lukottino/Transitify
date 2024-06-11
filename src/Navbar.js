@@ -12,19 +12,17 @@ function CustomNavbar() {
     return (
         <>
             <Navbar bg='dark' variant='dark' className="justify-content-between fixed-top">
-                <Container>
-                    <Navbar.Brand href="/">
-                        <img
-                        src={logo}
-                        height="40px"
-                        className="d-inline-block align-top"
-                        />
-                    </Navbar.Brand>
-                </Container>
-                <Form inline>
+                <Navbar.Brand href="/" style={{paddingLeft:"10px"}}>
+                    <img
+                    src={logo}
+                    height="40px"
+                    className="align-top"
+                    />
+                </Navbar.Brand>
+                <Form inline style={{paddingRight:"15px"}}>
                     <Row>
                         <Col xs="auto">
-                            <Button onClick={() => routeChange("/login")} style={{borderColor:"white", height:"100%px", borderRadius:"10px"}}>Login</Button>
+                            <Button onClick={() => routeChange("/login")} style={{ borderColor:"transparent", height:"100%px", borderRadius:"10px"}}>Login</Button>
                         </Col>
                     </Row>
                 </Form>
