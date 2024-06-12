@@ -20,8 +20,8 @@ function App() {
         <div>
           <Routes>
             <Route path='/' element={<HomePage />}/>
-            <Route path='/register' element={<Register />}/>
             <Route path='/login' element={<Login handleLoginSuccess={handleLoginSuccess}/>} />
+            <Route path='/register' element={<Register handleLoginSuccess={handleLoginSuccess}/>} />
           </Routes>
         </div>
       </Router>

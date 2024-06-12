@@ -63,9 +63,9 @@ router.route('/register').post((req, res) => {
   console.log('Request body:', req.body); // Log per il debug
   Db.register(email, password, nome, cognome, tipo, (error, result) => {
     if (error) {
-      res.status(500).send({ error: error });
+      res.status(500).send({ status: 500, error: error });
     } else {
-      res.status(200).send({ success: true, newPassword: result });
+      res.status(200).send({ status: 200, success: true, newPassword: result });
     }
   });
 });

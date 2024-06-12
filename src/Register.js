@@ -77,7 +77,7 @@ class Register extends React.Component {
                                             placeholder="Nome"
                                             name="nome"
                                             value={this.state.nome}
-                                            onChange={e => this.setState({ nome: e.target.value })} />
+                                            onChange={e => this.setState({...this.state, nome: e.target.value })} />
                                     </Form.Group>
                                 </Col>
                                 <Col>
@@ -88,7 +88,7 @@ class Register extends React.Component {
                                             placeholder="Cognome"
                                             name="cognome"
                                             value={this.state.cognome}
-                                            onChange={e => this.setState({ cognome: e.target.value })} />
+                                            onChange={e => this.setState({...this.state, cognome: e.target.value })} />
                                     </Form.Group>
                                 </Col>
                             </Row>
