@@ -49,10 +49,10 @@ router.route('/login').post((req, res) => {
   Db.postLogin(email, password, (error, result) => {
       if (error) {
           console.error('Errore durante il login:', error); // Log per il debug
-          res.status(500).send({ error: error });
+          res.status(500).send({ status: 500, error: error });
       } else {
           console.log('Login riuscito, token generato:', result); // Log per il debug
-          res.status(200).send({ success: true, token: result });
+          res.status(200).send({ status: 200, success: true, token: result });
       }
   });
 });
