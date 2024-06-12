@@ -16,6 +16,7 @@ class Login extends React.Component {
         e.preventDefault();
         this.ExecQuery();
     }
+    
 
     ExecQuery() {
         var payload = {
@@ -28,6 +29,7 @@ class Login extends React.Component {
             console.log(res.data);
             if(res.data.status==200)
             {
+                this.props.handleLoginSuccess(res.data.token); 
                 window.location.href = "http://localhost:3001/";
             }
         }) 

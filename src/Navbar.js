@@ -1,28 +1,56 @@
-import * as React from 'react';
-import { Button, Card, Form, Navbar, InputGroup, Row, Col, Container } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Assicurati di importare il CSS di Bootstrap
+import React, { useState, useEffect } from 'react';
+import { Button, Navbar, Form, Row, Col } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import { useNavigate } from 'react-router-dom';
-import logo from "./resources/transitify.png"
+import logo from "./resources/transitify.png";
 
 function CustomNavbar() {
     let navigate = useNavigate(); 
-    const routeChange = (path) =>{ 
-    navigate(path);
-  }
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            setIsAuthenticated(true);
+        }
+    }, []);
+
+    const handleLoginSuccess = () => {
+        setIsAuthenticated(true);
+        localStorage.setItem('token', 'your-jwt-token'); // Replace with actual token from login response
+    };
+
+    const handleLogout = () => {
+        setIsAuthenticated(false);
+        localStorage.removeItem('token');
+    };
+
+    const routeChange = (path) => { 
+        navigate(path);
+    };
+
     return (
         <>
             <Navbar bg='dark' variant='dark' className="justify-content-between fixed-top">
-                <Navbar.Brand href="/" style={{paddingLeft:"10px"}}>
+                <Navbar.Brand href="/" style={{ paddingLeft: "10px" }}>
                     <img
-                    src={logo}
-                    height="40px"
-                    className="align-top"
+                        src={logo}
+                        height="40px"
+                        className="align-top"
+                        alt="Transitify Logo"
                     />
                 </Navbar.Brand>
-                <Form inline style={{paddingRight:"15px"}}>
+                <Form inline style={{ paddingRight: "15px" }}>
                     <Row>
                         <Col xs="auto">
-                            <Button onClick={() => routeChange("/login")} style={{ borderColor:"transparent", height:"100%px", borderRadius:"10px"}}>Login</Button>
+                            {isAuthenticated ? (
+                                <>
+                                    <Button onClick={handleLogout} style={{ borderColor: "transparent", height: "100%px", borderRadius: "10px" }}>Logout</Button>
+                                    <Button onClick={() => routeChange("/profile")} style={{ borderColor: "transparent", height: "100%px", borderRadius: "10px", marginLeft: "10px" }}>Profile</Button>
+                                </>
+                            ) : (
+                                <Button onClick={() => routeChange("/login")} style={{ borderColor: "transparent", height: "100%px", borderRadius: "10px" }}>Login</Button>
+                            )}
                         </Col>
                     </Row>
                 </Form>
