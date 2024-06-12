@@ -15,9 +15,9 @@ function CustomNavbar() {
         }
     }, []);
 
-    const handleLoginSuccess = () => {
+    const handleLoginSuccess = (token) => {
         setIsAuthenticated(true);
-        localStorage.setItem('token', 'your-jwt-token'); // Replace with actual token from login response
+        localStorage.setItem('token', token);
     };
 
     const handleLogout = () => {
