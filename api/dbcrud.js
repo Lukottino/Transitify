@@ -14,68 +14,13 @@ async function getAccount(idAccount) {
   }
 }
 
-async  function  getElencoClienti() {
+async function getStations() {
   try {
-    let  pool = await  sql.connect(config);
-    let  elencoFilm = await  pool.request().query("SELECT * from CLIENTE");
-    return  elencoFilm.recordsets;
-  }
-  catch (error) {
-    console.log(error);
-  }
-}
-
-async  function  getProdotti() {
-  try {
-    let  pool = await  sql.connect(config);
-    let  elencoProdotti = await  pool.request().query("SELECT * from CONSUMAZIONE");
-    return  elencoProdotti.recordsets;
-  }
-  catch (error) {
-    console.log(error);
-  }
-}
-
-async function postListino(...abilitazioni){
-  try{
-    let pool=await sql.connect(config);
-    let res = await pool.request()
-    .input('val1', sql.Int, abilitazioni[0])
-    .input('val2', sql.Int,abilitazioni[1])
-    .input('val3', sql.Int,abilitazioni[2])
-    .query("SELECT * FROM (LISTINO JOIN CONSUMAZIONE ON nomeConsumazione = nome) JOIN MENU on codiceMenu = codice WHERE codiceSede=@val1 OR codiceSede=@val2 OR codiceSede=val3")
-  }
-  catch(error){
-    console.log(error);
-  }
-}
-
-
-/*
-async  function  getAccount(idAccount) {
-  try {
-    let  pool = await  sql.connect(config);
-    let  account = await  pool.request()
-    .input('input_parameter', sql.Int, idAccount)
-    .query("SELECT * FROM account WHERE idAccount = @input_parameter");
-    return  account.recordsets;
-  }
-  catch (error) {
-    console.log(error);
-  }
-}
-*/
-
-async  function  getClasse(ClasseCliente) {
-  try {
-    let  pool = await  sql.connect(config);
-    let  cliente = await  pool.request()
-    .input('input_parameter', sql.Int, ClasseCliente)
-    .query("SELECT * from CLIENTE where CLASSE = @input_parameter");
-    return  cliente.recordsets;
-  }
-  catch (error) {
-    console.log(error);
+    const [rows, fields] = await pool.execute('SELECT idStazione, nome FROM stazione');
+    return rows;
+  } catch (error) {
+    console.error('Errore durante il recupero delle stazioni:', error);
+    throw error;
   }
 }
 
@@ -149,26 +94,10 @@ async function postLogin(email, password, callback) {
       return callback(err);
   }
 }
-  
-
-async function aggiungiFilm(film){
-  try{
-    let pool = await sql.connect(config);
-    let nuovoFilm = await pool.request()
-    .input('Titolo', sql.NVarChar, nuovoFilm.Titolo)
-    .input('Anno', sql.NVarChar, nuovoFilm.Anno)
-    .input('Regista', sql.NVarChar, nuovoFilm.Regista)
-    .query('INSERT INTO Film (Titolo, Anno, Regista) VALUES (@Titolo, @Anno, @Regista)');
-    return nuovoFilm.recordsets
-  }
-  catch (err)
-  {
-    console.log(err);
-  }
-}
 
 module.exports = {
   getAccount:  getAccount,
   postLogin,
-  register:  register
+  register:  register,
+  getStations: getStations
 }

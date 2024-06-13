@@ -15,19 +15,6 @@ router.use((request, response, next) => {
   console.log('Server in funzione...');
   next();
 });
- 
- 
-router.route('/elencoclienti').get((request, response) => {
-  Db.getElencoClienti().then((data) => {
-    response.json(data[0]);
-  })
-})
-
-router.route('/prodotti').get((request, response) => {
-  Db.getProdotti(request.params.id).then((data) => {
-    response.json(data[0]);
-  })
-})
 
 router.route('/account/:id').get((request, response) => {
   Db.getAccount(request.params.id).then((data) => {
@@ -36,13 +23,14 @@ router.route('/account/:id').get((request, response) => {
   })
 })
 
-
-router.route('/newFilm').post((request, response) => {
-  let nuovoFilm = {...request.body}
-  Db.aggiungiFilm(nuovoFilm).then((data) => {
-    response.status(201).json(data);
-  })
-})
+router.route('/stations').get((req, res) => {
+  Db.getStations().then((data) => {
+    res.json(data);
+  }).catch((error) => {
+    console.error('Errore durante il recupero delle stazioni:', error);
+    res.status(500).send({ status: 500, error: error });
+  });
+});
 
 router.route('/login').post((req, res) => {
   let { email, password } = req.body;
