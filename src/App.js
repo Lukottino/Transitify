@@ -5,6 +5,7 @@ import HomePage from './HomePage';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import CustomNavbar from './Navbar';
 import React from 'react';
+import TravelPage from './TravelPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
@@ -22,6 +23,7 @@ function App() {
             <Route path='/' element={<HomePage />}/>
             <Route path='/login' element={<Login handleLoginSuccess={handleLoginSuccess}/>} />
             <Route path='/register' element={<Register handleLoginSuccess={handleLoginSuccess}/>} />
+            <Route path='/trip' element={<TravelPage />}/>
           </Routes>
         </div>
       </Router>

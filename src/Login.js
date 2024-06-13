@@ -30,7 +30,7 @@ class Login extends React.Component {
             if(res.data.status==200)
             {
                 this.props.handleLoginSuccess(res.data.token); 
-                window.location.href = "http://localhost:3001/";
+                window.location.href = "http://localhost:3001/trip";
             }
         }) 
     }
