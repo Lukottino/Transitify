@@ -61,24 +61,53 @@ class TravelPage extends Component {
 
   handleSimulateTrip = async () => {
     const { selectedDepartureId, selectedArrivalId } = this.state;
-
+  
     if (selectedDepartureId && selectedArrivalId) {
       try {
         const response = await axios.post('http://localhost:3000/api/simulate-trip', {
           departureId: selectedDepartureId,
           arrivalId: selectedArrivalId
         });
-
+  
         const tripData = response.data;
-        // Gestisci la risposta come necessario
+  
+        if (tripData.route === 'direct') {
+          // Viaggio diretto
+          this.setState({
+            tripMessage: '',
+            possibleRoutes: [{
+              segments: [{
+                fromStation: tripData.stations[0],
+                toStation: tripData.stations[1]
+              }]
+            }]
+          });
+        } else if (tripData.route === 'transfer') {
+          // Viaggio con trasferimento
+          this.setState({
+            tripMessage: '',
+            possibleRoutes: tripData.transferRoutes.map(route => ({
+              transferStation: route.transferStation,
+              segments: route.segments
+            }))
+          });
+        } else {
+          // Nessun percorso trovato
+          this.setState({
+            tripMessage: 'Nessun percorso trovato.',
+            possibleRoutes: []
+          });
+        }
+  
       } catch (error) {
         console.error('Errore durante la simulazione del viaggio:', error);
-        this.setState({ tripMessage: 'Errore durante la simulazione del viaggio.' });
+        this.setState({ tripMessage: 'Errore durante la simulazione del viaggio.', possibleRoutes: [] });
       }
     } else {
       this.setState({ tripMessage: 'Per favore seleziona sia la stazione di partenza che quella di arrivo.', possibleRoutes: [] });
     }
   };
+  
 
   render() {
     return (
@@ -119,22 +148,23 @@ class TravelPage extends Component {
             </Button>
             {this.state.tripMessage && <p className="mt-3">{this.state.tripMessage}</p>}
             {this.state.possibleRoutes.length > 0 && (
-              <div>
-                <h3>Percorsi con Trasferimento:</h3>
-                <ul>
-                  {this.state.possibleRoutes.map((route, index) => (
-                    <li key={index}>
-                      {route.segments.map((segment, idx) => (
-                        <div key={idx}>
-                          {idx > 0 && <span> -&gt; Trasferimento -&gt; </span>}
-                          <span>{segment.fromStation.nome} ({segment.fromStation.tipo}) -&gt; {segment.toStation.nome}</span>
-                        </div>
-                      ))}
-                      <p>Linea di Trasferimento: {route.transferStation.nome}</p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                <div style={{ paddingTop: '50px' }}>
+                    <h3>Percorsi con Trasferimento:</h3>
+                    <ul>
+                        {this.state.possibleRoutes.map((route, index) => (
+                            <li key={index}>
+                                {route.segments.map((segment, idx) => (
+                                    <div key={idx}>
+                                        {idx > 0 && <span>Trasferimento -&gt; </span>}
+                                        {idx >= 0 && <span>{segment.fromStation && segment.fromStation.nome} ({segment.fromStation && segment.fromStation.tipo}) -&gt; {segment.toStation && segment.toStation.nome} ({segment.toStation && segment.toStation.tipo})</span>}
+                                        {segment.toLine && <p>Linea di Trasferimento: {segment.toLine.nome}</p>}
+                                        {segment.fromLine && <p>Linea: {segment.fromLine.nome}</p>}
+                                    </div>
+                                ))}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
             )}
           </Col>
         </Row>
