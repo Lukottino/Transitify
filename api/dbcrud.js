@@ -16,7 +16,7 @@ async function getAccount(idAccount) {
 
 async function getStations() {
   try {
-    const [rows, fields] = await pool.execute('SELECT idStazione, nome FROM stazione');
+    const [rows, fields] = await pool.execute('SELECT idStazione, nome, tipo FROM stazione');
     return rows;
   } catch (error) {
     console.error('Errore durante il recupero delle stazioni:', error);

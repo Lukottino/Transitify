@@ -8,6 +8,7 @@ class TravelPage extends React.Component {
         super(props);
         this.state = {
           stations: [],
+          filteredStations: [],
           departure: '',
           arrival: '',
           tripMessage: ''
@@ -29,7 +30,22 @@ class TravelPage extends React.Component {
     };
 
     handleDepartureChange = (e) => {
-      this.setState({ ...this.state, departure: e.target.value });
+        const selectedDeparture = e.target.value;
+        const selectedDepartureStation = this.state.stations.find(station => station.nome === selectedDeparture);
+        
+        if (selectedDepartureStation) {
+            const filteredStations = this.state.stations.filter(station => 
+                station.tipo === selectedDepartureStation.tipo && 
+                station.idStazione !== selectedDepartureStation.idStazione
+            );            
+            this.setState({ 
+            departure: selectedDeparture, 
+            arrival: '', // Reset the arrival when departure changes
+            filteredStations: filteredStations 
+            });
+        } else {
+            this.setState({ departure: '', filteredStations: [] });
+        }
     };
 
     handleArrivalChange = (e) => {
@@ -58,7 +74,7 @@ class TravelPage extends React.Component {
                             <option value="">Seleziona una stazione</option>
                             {this.state.stations.map((station) => (
                             <option key={station.idStazione} value={station.nome}>
-                                {station.nome}
+                                [{station.idStazione}] {station.nome}
                             </option>
                             ))}
                         </Form.Control>
@@ -69,9 +85,9 @@ class TravelPage extends React.Component {
                         <Form.Label>Stazione di Arrivo</Form.Label>
                         <Form.Control as="select" value={this.state.arrival} onChange={this.handleArrivalChange}>
                             <option value="">Seleziona una stazione</option>
-                            {this.state.stations.map((station) => (
+                            {this.state.filteredStations.map((station) => (
                             <option key={station.idStazione} value={station.nome}>
-                                {station.nome}
+                                [{station.idStazione}] {station.nome}
                             </option>
                             ))}
                         </Form.Control>
