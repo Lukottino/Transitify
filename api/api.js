@@ -24,13 +24,32 @@ router.route('/account/:id').get((request, response) => {
 })
 
 router.route('/stations').get((req, res) => {
-  Db.getStations().then((data) => {
-    res.json(data);
-  }).catch((error) => {
-    console.error('Errore durante il recupero delle stazioni:', error);
-    res.status(500).send({ status: 500, error: error });
-  });
+  try {
+    Db.getStations().then((data) => {
+      res.json(data);
+    }).catch(error => {
+      console.error('Errore durante il recupero delle stazioni e delle linee:', error);
+      res.status(500).json({ error: 'Errore durante il recupero delle stazioni e delle linee.' });
+    });
+  } catch (error) {
+    console.error('Errore durante il recupero delle stazioni e delle linee:', error);
+    res.status(500).json({ error: 'Errore durante il recupero delle stazioni e delle linee.' });
+  }
 });
+
+
+app.post('/api/simulate-trip', async (req, res) => {
+  const { departureId, arrivalId } = req.body;
+  try {
+    const tripData = await Db.simulateTrip(departureId, arrivalId);
+    res.json(tripData);
+  } catch (error) {
+    console.error('Errore durante la simulazione del viaggio:', error);
+    res.status(500).json({ error: 'Errore durante la simulazione del viaggio.' });
+  }
+});
+
+
 
 router.route('/login').post((req, res) => {
   let { email, password } = req.body;
