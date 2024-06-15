@@ -152,7 +152,21 @@ async function register(email, password, nome, cognome, tipo, callback = () => {
 
     await pool.execute(query, [email, newPassword, nome, cognome, tipo]);
 
-    return callback(null, newPassword);
+    const [newUserRows] = await pool.execute("SELECT * FROM account WHERE email = ?", [email]);
+    const newUser = newUserRows[0];
+
+    const token = jwt.sign(
+      {
+        user_id: newUser.id,
+        email: email
+      },
+      "tuttecose", // Replace with your secret
+      {
+        expiresIn: "60 days"
+      }
+    );
+
+    return callback(null, { token, type: tipo });
   } catch (err) {
     console.error(err);
     return callback(err);
@@ -179,14 +193,21 @@ async function postLogin(email, password, callback) {
         const token = jwt.sign(
           {
             user_id: user.id,
-            email: email
+            email: email,
+            type: user.tipo
           },
           "tuttecose", // Sostituisci con il tuo secret
           {
             expiresIn: "60 days"
           }
         );
-        return callback(null, token);
+        const type = user.tipo
+
+        const result = {
+          token: token,
+          type: type
+        };
+        return callback(null, result);
       } else {
         console.log('Password non corrispondente');
         return callback('BAD LOGIN');

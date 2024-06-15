@@ -149,7 +149,7 @@ class TravelPage extends Component {
             {this.state.tripMessage && <p className="mt-3">{this.state.tripMessage}</p>}
             {this.state.possibleRoutes.length > 0 && (
                 <div style={{ paddingTop: '50px' }}>
-                    <h3>Percorsi con Trasferimento:</h3>
+                    <h3>Percorso:</h3>
                     <ul>
                         {this.state.possibleRoutes.map((route, index) => (
                             <li key={index}>
@@ -157,7 +157,7 @@ class TravelPage extends Component {
                                     <div key={idx}>
                                         {idx > 0 && <span>Trasferimento -&gt; </span>}
                                         {idx >= 0 && <span>{segment.fromStation && segment.fromStation.nome} ({segment.fromStation && segment.fromStation.tipo}) -&gt; {segment.toStation && segment.toStation.nome} ({segment.toStation && segment.toStation.tipo})</span>}
-                                        {segment.toLine && <p>Linea di Trasferimento: {segment.toLine.nome}</p>}
+                                        {idx > 0 && segment.toLine && <p>Linea di Trasferimento: {segment.toLine.nome}</p>}
                                         {segment.fromLine && <p>Linea: {segment.fromLine.nome}</p>}
                                     </div>
                                 ))}

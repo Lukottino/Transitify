@@ -59,23 +59,23 @@ router.route('/login').post((req, res) => {
           res.status(500).send({ status: 500, error: error });
       } else {
           console.log('Login riuscito, token generato:', result); // Log per il debug
-          res.status(200).send({ status: 200, success: true, token: result });
+          res.status(200).send({ status: 200, success: true, token: result.token, type: result.type});
       }
   });
 });
 
-//gestisci l'username dell'utente
 router.route('/register').post((req, res) => {
   let { email, password, nome, cognome, tipo } = req.body;
-  console.log('Request body:', req.body); // Log per il debug
+  console.log('Request body:', req.body); // Log for debugging
   Db.register(email, password, nome, cognome, tipo, (error, result) => {
     if (error) {
       res.status(500).send({ status: 500, error: error });
     } else {
-      res.status(200).send({ status: 200, success: true, newPassword: result });
+      res.status(200).send({ status: 200, success: true, token: result.token });
     }
   });
 });
+
   
 var  port = process.env.PORT || 3000;
 app.listen(port);
