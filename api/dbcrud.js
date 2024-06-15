@@ -235,6 +235,17 @@ async function register(email, password, nome, cognome, tipo, callback = () => {
   }
 }
 
+async function getUniqueCards(accountId) {
+  try {
+    console.log(accountId)
+    const [rows, fields] = await pool.execute('SELECT * FROM card JOIN unique_card ON card.cardId = unique_card.cardId WHERE idAccount = ?', [accountId]);
+    return rows;
+  } catch (error) {
+    console.error('Errore durante il recupero delle carte:', error);
+    throw error;
+  }
+}
+
 async function postLogin(email, password, callback) {
   try {
     console.log('Email e password ricevuti:', email, password);
@@ -254,7 +265,7 @@ async function postLogin(email, password, callback) {
 
         const token = jwt.sign(
           {
-            user_id: user.id,
+            user_id: user.idAccount,
             email: email,
             type: user.tipo
           },
@@ -263,11 +274,14 @@ async function postLogin(email, password, callback) {
             expiresIn: "60 days"
           }
         );
-        const type = user.tipo
+        const type = user.tipo;
+        const idAccount = user.idAccount;
+        console.log(idAccount)
 
         const result = {
           token: token,
-          type: type
+          type: type,
+          accountId: idAccount
         };
         return callback(null, result);
       } else {
@@ -279,6 +293,7 @@ async function postLogin(email, password, callback) {
     console.error('Errore durante il login:', err);
     return callback(err);
   }
+
 }
 
 module.exports = {
@@ -292,5 +307,6 @@ module.exports = {
   deleteClient,
   updateClient,
   getClient,
-  getAccounts
+  getAccounts,
+  getUniqueCards
 };

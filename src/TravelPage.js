@@ -15,13 +15,30 @@ class TravelPage extends Component {
       departure: '',           // Rimossa variabile non necessaria
       arrival: '',             // Rimossa variabile non necessaria
       tripMessage: '',
-      possibleRoutes: []
+      possibleRoutes: [],
+      cards: [],
+      accountId: ''
     };
   }
 
   componentDidMount() {
     this.fetchStations();
+    this.state.accountId = localStorage.getItem('accountId')
+    this.fetchCards();
   }
+
+  fetchCards = async () => {
+    try {
+      const response = await axios.get(`http://localhost:3000/api/account/${this.state.accountId}/cards`);
+      this.setState({
+        cards: response.data
+      });
+      console.log(this.state.accountId)
+      console.log(this.state.cards)
+    } catch (error) {
+      console.error('Errore durante il recupero delle carte:', error);
+    }
+  };
 
   fetchStations = async () => {
     try {
@@ -114,7 +131,7 @@ class TravelPage extends Component {
       <Container className="my-4" style={{ paddingTop: '40px' }}>
         <h1>Simulazione dei Viaggi</h1>
         <Row>
-          <Col md={6}>
+          <Col md={4}>
             <Form.Group controlId="departureStation">
               <Form.Label>Stazione di Partenza</Form.Label>
               <Form.Control as="select" value={this.state.selectedDepartureId} onChange={this.handleDepartureChange}>
@@ -127,7 +144,7 @@ class TravelPage extends Component {
               </Form.Control>
             </Form.Group>
           </Col>
-          <Col md={6}>
+          <Col md={4}>
             <Form.Group controlId="arrivalStation">
               <Form.Label>Stazione di Arrivo</Form.Label>
               <Form.Control as="select" value={this.state.selectedArrivalId} onChange={this.handleArrivalChange}>
@@ -135,6 +152,19 @@ class TravelPage extends Component {
                 {this.state.filteredStations.map((station) => (
                   <option key={station.idStazione} value={station.idStazione}>
                     [{station.idStazione}] {station.nome}
+                  </option>
+                ))}
+              </Form.Control>
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group controlId="cards">
+              <Form.Label>Carte</Form.Label>
+              <Form.Control as="select" value={this.state.cards} onChange={this.handleCardsChange}>
+                <option value="">Seleziona una carta</option>
+                {this.state.cards.map((card) => (
+                  <option key={card.cardId} value={card.cardId}>
+                    [{card.cardId}] €{card.saldo}
                   </option>
                 ))}
               </Form.Control>

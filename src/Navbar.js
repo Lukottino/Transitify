@@ -23,6 +23,7 @@ function CustomNavbar() {
     const handleLogout = () => {
         setIsAuthenticated(false);
         localStorage.removeItem('token');
+        localStorage.removeItem('accountId');
         routeChange("/")
     };
 

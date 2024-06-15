@@ -16,6 +16,15 @@ router.use((request, response, next) => {
   next();
 });
 
+app.get('/api/account/:accountId/cards', async (req, res) => {
+  try {
+    const cards = await Db.getUniqueCards(req.params.accountId);
+    res.json(cards);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 app.get('/api/clienti', async (req, res) => {
   try {
     const clients = await Db.getClients();
@@ -108,7 +117,7 @@ router.route('/login').post((req, res) => {
           res.status(500).send({ status: 500, error: error });
       } else {
           console.log('Login riuscito, token generato:', result); // Log per il debug
-          res.status(200).send({ status: 200, success: true, token: result.token, type: result.type});
+          res.status(200).send({ status: 200, success: true, token: result.token, type: result.type, accountId: result.accountId});
       }
   });
 });

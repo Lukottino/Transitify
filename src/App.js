@@ -12,10 +12,12 @@ import AdminPage from './AdminPage';
 function App() {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
 
-  const handleLoginSuccess = ({ token, type }) => {
+  const handleLoginSuccess = ({ token, type, accountId }) => {
+    console.log("ACCOUNT ID: ?", accountId)
     setIsAuthenticated(true);
     localStorage.setItem('token', token);
     localStorage.setItem('type', type);
+    localStorage.setItem('accountId', accountId);
   };
 
   return (
