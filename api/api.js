@@ -16,6 +16,55 @@ router.use((request, response, next) => {
   next();
 });
 
+app.get('/api/clienti', async (req, res) => {
+  try {
+    const clients = await Db.getClients();
+    res.json(clients);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+app.get('/api/accounts', async (req, res) => {
+  try {
+    const accounts = await Db.getAccounts();
+    res.json(accounts);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+app.post('/api/clienti', async (req, res) => {
+  try {
+    const newClient = req.body;
+    const result = await Db.createClient(newClient);
+    res.json(result);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+app.put('/api/clienti/:id', async (req, res) => {
+  try {
+    const clientId = req.params.id;
+    const updatedClient = req.body;
+    const result = await Db.updateClient(clientId, updatedClient);
+    res.json(result);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+app.delete('/api/clienti/:id', async (req, res) => {
+  try {
+    const clientId = req.params.id;
+    const result = await Db.deleteClient(clientId);
+    res.json(result);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 router.route('/account/:id').get((request, response) => {
   Db.getAccount(request.params.id).then((data) => {
     console.log(response.json(data[0]))

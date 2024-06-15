@@ -2,6 +2,68 @@ const pool = require('./dbconfig');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+async function getClients() {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM CLIENTE');
+    return rows;
+  } catch (error) {
+    console.error('Errore durante il recupero dei clienti:', error);
+    throw error;
+  }
+}
+
+async function getAccounts() {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM ACCOUNT');
+    return rows;
+  } catch (error) {
+    console.error('Errore durante il recupero degli account:', error);
+    throw error;
+  }
+}
+
+async function createClient(client) {
+  try {
+    const { nome, cognome, email } = client;
+    const [result] = await pool.execute('INSERT INTO CLIENTE (nome, cognome, email) VALUES (?, ?, ?)', [nome, cognome, email]);
+    return { clienteId: result.insertId, nome, cognome, email };
+  } catch (error) {
+    console.error('Errore durante la creazione del cliente:', error);
+    throw error;
+  }
+}
+
+async function updateClient(clienteId, client) {
+  try {
+    const { nome, cognome, email } = client;
+    await pool.execute('UPDATE CLIENTE SET nome = ?, cognome = ?, email = ? WHERE clienteId = ?', [nome, cognome, email, clienteId]);
+    return { clienteId, nome, cognome, email };
+  } catch (error) {
+    console.error('Errore durante l\'aggiornamento del cliente:', error);
+    throw error;
+  }
+}
+
+async function deleteClient(clienteId) {
+  try {
+    await pool.execute('DELETE FROM CLIENTE WHERE clienteId = ?', [clienteId]);
+    return { clienteId };
+  } catch (error) {
+    console.error('Errore durante l\'eliminazione del cliente:', error);
+    throw error;
+  }
+}
+
+async function getClient(idClient) {
+  try {
+    const [rows, fields] = await pool.execute('SELECT * FROM cliente WHERE idCliente = ?', [idClient]);
+    return rows;
+  } catch (error) {
+    console.error('Errore durante il recupero dell\'account:', error);
+    throw error;
+  }
+}
+
 async function getAccount(idAccount) {
   try {
     const [rows, fields] = await pool.execute('SELECT * FROM account WHERE idAccount = ?', [idAccount]);
@@ -224,5 +286,11 @@ module.exports = {
   postLogin,
   register,
   getStations,
-  simulateTrip
+  simulateTrip,
+  getClients,
+  createClient,
+  deleteClient,
+  updateClient,
+  getClient,
+  getAccounts
 };

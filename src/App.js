@@ -16,11 +16,6 @@ function App() {
     setIsAuthenticated(true);
     localStorage.setItem('token', token);
     localStorage.setItem('type', type);
-    if (type === 'ADMIN') {
-      window.location.href = "/administration"; // Redirect to administration if user is admin
-    } else {
-      window.location.href = "/";
-    }
   };
 
   return (
@@ -33,7 +28,7 @@ function App() {
             <Route path='/login' element={<Login handleLoginSuccess={handleLoginSuccess} />} />
             <Route path='/register' element={<Register handleLoginSuccess={handleLoginSuccess} />} />
             <Route path='/trip' element={<RedirectRoute><TravelPage /></RedirectRoute>} />
-            <Route path='/administration' element={<RedirectRoute><AdminPage /></RedirectRoute>} />
+            <Route path='/administration' element={<AdminPage />} />
           </Routes>
         </div>
       </Router>
