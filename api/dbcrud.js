@@ -129,7 +129,7 @@ async function simulateTrip(departureId, arrivalId, cardId) {
     const directRoute = findDirectRoute(departureId, arrivalId, lineStations);
     
     if (directRoute) {
-      const zones = calculateZones([departureStation, arrivalStation]);
+      const zones = calculateZones([departureStation, arrivalStation], "direct");
       const cost = calculateCost(zones);
 
       // Insert CHECKIN movement
@@ -165,7 +165,7 @@ async function simulateTrip(departureId, arrivalId, cardId) {
 
     if (transferRoutes.length > 0) {
       const allStations = transferRoutes.flatMap(route => route.segments.flatMap(segment => [segment.fromStation, segment.toStation])).filter(station => station);
-      const zones = calculateZones(allStations);
+      const zones = calculateZones(allStations, "transfer");
       const cost = calculateCost(zones);
 
       // Insert CHECKIN movement
@@ -238,10 +238,14 @@ async function updateMovementWithViaggioId(connection, viaggioId, stationId, tip
   return updateResult.affectedRows > 0;
 }
 
-function calculateZones(stations) {
+function calculateZones(stations, type) {
   const zones = new Set();
   stations.filter(station => station !== undefined).forEach(station => zones.add(station.idZona));
-  return zones.size;
+  if(type == "direct"){
+    return zones.size;
+  }else if (type == "transfer") {
+    return zones.size + 1;
+  }
 }
 
 function calculateCost(zones) {
