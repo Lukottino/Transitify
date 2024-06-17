@@ -8,7 +8,6 @@ import React from 'react';
 import TravelPage from './TravelPage';
 import RedirectRoute from './RedirectRoute';
 import AdminPage from './AdminPage';
-import StatisticsPage from './StatisticsPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
@@ -32,7 +31,6 @@ function App() {
             <Route path='/register' element={<Register handleLoginSuccess={handleLoginSuccess} />} />
             <Route path='/trip' element={<RedirectRoute><TravelPage /></RedirectRoute>} />
             <Route path='/administration' element={<AdminPage />} />
-            <Route path='/administration/statistics' element={<StatisticsPage />}/>
           </Routes>
         </div>
       </Router>

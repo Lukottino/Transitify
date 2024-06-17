@@ -161,9 +161,6 @@ class AdminPage extends Component {
                         <Button variant="primary" className="ms-3" onClick={() => this.handleShowModal({ entityType: 'account' })}>
                             Add New Account
                         </Button>
-                        <Button variant="warning" className='ms-3' onClick={() => this.changeRoute("administration/statistics")}>
-                            Statistics
-                        </Button>
                     </div>
 
                     <Table striped bordered hover className="mt-3">
