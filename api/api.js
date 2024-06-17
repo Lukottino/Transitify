@@ -25,7 +25,23 @@ app.get('/api/account/:accountId/cards', async (req, res) => {
   }
 });
 
+app.get('/api/account/:accountId/top-routes', async (req, res) => {
+  try {
+    const routes = await Db.getTopRoutes(req.params.accountId);
+    res.json(routes);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
 
+app.get('/api/account/:accountId/average-cost', async (req, res) => {
+  try {
+    const cost = await Db.getAverageCost(req.params.accountId);
+    res.json(cost);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
 
 app.get('/api/accounts', async (req, res) => {
   try {

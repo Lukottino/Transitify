@@ -2,6 +2,58 @@ const pool = require('./dbconfig');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+async function getAverageCost(accountId) {
+  try {
+    const [rows]= await pool.execute(
+      `SELECT AVG(prezzo) AS prezzoMedio
+      FROM viaggio 
+      INNER JOIN (SELECT idViaggio, idAccount FROM unique_card c
+            LEFT JOIN viaggio v ON c.cardId = v.cardId) Acc ON Acc.idViaggio = viaggio.idViaggio
+      WHERE Acc.idAccount = ?`, [accountId]);
+    return rows;
+  } catch (error) {
+    console.error('Errore durante il recupero del costo medio:', error);
+    throw error;
+  }
+}
+
+async function getTopRoutes(accountId) {
+  try {
+    const [rows, fields] = await pool.execute(`
+      SELECT COUNT(*) As Frequenza, CONCAT(s1.nome,' - ', s2.nome) AS percorso  FROM (
+        SELECT MAX(CASE WHEN x = 'IN' THEN IdStazione ELSE 0 END) As Ingresso,
+              MAX(CASE WHEN x = 'OUT' THEN IdStazione ELSE 0 END) As Uscita, IngUsc.idViaggio
+        FROM (
+        SELECT 'IN' As x, movimento.idViaggio, INGRESSO.idMovimento, Movimento.IdStazione
+        FROM Movimento 
+        INNER JOIN ( SELECT MIN(idMovimento) As idMovimento, idViaggio
+            FROM movimento m1
+            WHERE tipoMovimento = 'CHECKIN'
+                        GROUP BY idViaggio
+                        ) INGRESSO ON movimento.idMovimento = INGRESSO.idMovimento
+        UNION 
+        SELECT 'OUT' As x, movimento.idViaggio, INGRESSO.idMovimento, Movimento.IdStazione
+        FROM Movimento 
+        INNER JOIN ( SELECT MIN(idMovimento) As idMovimento, idViaggio
+            FROM movimento m1
+            WHERE tipoMovimento = 'CHECKOUT'
+                        GROUP BY idViaggio
+                        ) INGRESSO ON movimento.idMovimento = INGRESSO.idMovimento ) IngUsc
+        GROUP BY IngUsc.idViaggio ) Tratte
+        LEFT JOIN stazione s1 ON s1.idStazione = Tratte.Ingresso
+        LEFT JOIN stazione s2 ON s2.idStazione = Tratte.Uscita
+        INNER JOIN (SELECT idViaggio, idAccount FROM unique_card c
+              LEFT JOIN viaggio v ON c.cardId = v.cardId) Acc ON Acc.idViaggio = Tratte.IdViaggio
+        WHERE Acc.idAccount = ?
+        GROUP BY s1.Nome, s2.Nome`, [accountId]);
+    
+    return rows;
+  } catch (error) {
+    console.error('Errore durante il recupero delle carte:', error);
+    throw error;
+  }
+}
+
 async function getClients() {
   try {
     const [rows] = await pool.execute('SELECT * FROM CLIENTE');
@@ -449,5 +501,7 @@ module.exports = {
   getClient,
   getAccounts,
   getUniqueCards,
-  deleteAccount
+  deleteAccount,
+  getTopRoutes,
+  getAverageCost
 };
