@@ -10,31 +10,31 @@ class TravelPage extends Component {
       stations: [],
       lines: [],
       filteredStations: [],
-      selectedDepartureId: '', // Aggiunto stato per l'ID della partenza
-      selectedArrivalId: '',   // Aggiunto stato per l'ID dell'arrivo
-      departure: '',           // Rimossa variabile non necessaria
-      arrival: '',             // Rimossa variabile non necessaria
+      selectedDepartureId: '',
+      selectedArrivalId: '',
+      selectedCardId: '',
       tripMessage: '',
       possibleRoutes: [],
       cards: [],
-      accountId: ''
+      accountId: '',
+      cost: 0,
+      cardUpdated: []
     };
   }
 
   componentDidMount() {
-    this.fetchStations();
-    this.state.accountId = localStorage.getItem('accountId')
-    this.fetchCards();
+    this.setState({ accountId: localStorage.getItem('accountId') }, () => {
+      this.fetchStations();
+      this.fetchCards();
+    });
   }
 
   fetchCards = async () => {
     try {
       const response = await axios.get(`http://localhost:3000/api/account/${this.state.accountId}/cards`);
-      this.setState({
-        cards: response.data
-      });
-      console.log(this.state.accountId)
-      console.log(this.state.cards)
+      this.setState({ cards: response.data });
+      console.log(this.state.accountId);
+      console.log(this.state.cards);
     } catch (error) {
       console.error('Errore durante il recupero delle carte:', error);
     }
@@ -76,20 +76,25 @@ class TravelPage extends Component {
     this.setState({ selectedArrivalId: selectedArrivalId });
   };
 
+  handleCardChange = (e) => {
+    this.state.selectedCardId = parseInt(e.target.value);
+    console.log("card: ", this.state.selectedCardId)
+  };
+
   handleSimulateTrip = async () => {
-    const { selectedDepartureId, selectedArrivalId } = this.state;
-  
-    if (selectedDepartureId && selectedArrivalId) {
+    const { selectedDepartureId, selectedArrivalId, selectedCardId } = this.state;
+
+    if (selectedDepartureId && selectedArrivalId && selectedCardId) {
       try {
         const response = await axios.post('http://localhost:3000/api/simulate-trip', {
           departureId: selectedDepartureId,
-          arrivalId: selectedArrivalId
+          arrivalId: selectedArrivalId,
+          selectedCardId: selectedCardId
         });
-  
+
         const tripData = response.data;
-  
+
         if (tripData.route === 'direct') {
-          // Viaggio diretto
           this.setState({
             tripMessage: '',
             possibleRoutes: [{
@@ -97,34 +102,37 @@ class TravelPage extends Component {
                 fromStation: tripData.stations[0],
                 toStation: tripData.stations[1]
               }]
-            }]
+            }],
+            cost: tripData.cost,
+            cardUpdated: tripData.cardUpdated
           });
         } else if (tripData.route === 'transfer') {
-          // Viaggio con trasferimento
           this.setState({
             tripMessage: '',
             possibleRoutes: tripData.transferRoutes.map(route => ({
               transferStation: route.transferStation,
               segments: route.segments
-            }))
+            })),
+            cost: tripData.cost,
+            cardUpdated: tripData.cardUpdated
           });
         } else {
-          // Nessun percorso trovato
           this.setState({
             tripMessage: 'Nessun percorso trovato.',
-            possibleRoutes: []
+            possibleRoutes: [],
+            cost: 0,
+            cardUpdated: []
           });
         }
-  
+
       } catch (error) {
         console.error('Errore durante la simulazione del viaggio:', error);
         this.setState({ tripMessage: 'Errore durante la simulazione del viaggio.', possibleRoutes: [] });
       }
     } else {
-      this.setState({ tripMessage: 'Per favore seleziona sia la stazione di partenza che quella di arrivo.', possibleRoutes: [] });
+      this.setState({ tripMessage: 'Per favore seleziona sia la stazione di partenza, arrivo e la carta.', possibleRoutes: [] });
     }
   };
-  
 
   render() {
     return (
@@ -160,7 +168,7 @@ class TravelPage extends Component {
           <Col md={4}>
             <Form.Group controlId="cards">
               <Form.Label>Carte</Form.Label>
-              <Form.Control as="select" value={this.state.cards} onChange={this.handleCardsChange}>
+              <Form.Control as="select" value={this.state.selectedCardId} onChange={this.handleCardChange}>
                 <option value="">Seleziona una carta</option>
                 {this.state.cards.map((card) => (
                   <option key={card.cardId} value={card.cardId}>
@@ -171,33 +179,46 @@ class TravelPage extends Component {
             </Form.Group>
           </Col>
         </Row>
-        <Row className="mt-4">
-          <Col>
-            <Button variant="primary" onClick={this.handleSimulateTrip}>
-              Simula Viaggio
-            </Button>
-            {this.state.tripMessage && <p className="mt-3">{this.state.tripMessage}</p>}
-            {this.state.possibleRoutes.length > 0 && (
-                <div style={{ paddingTop: '50px' }}>
-                    <h3>Percorso:</h3>
-                    <ul>
-                        {this.state.possibleRoutes.map((route, index) => (
-                            <li key={index}>
-                                {route.segments.map((segment, idx) => (
-                                    <div key={idx}>
-                                        {idx > 0 && <span>Trasferimento -&gt; </span>}
-                                        {idx >= 0 && <span>{segment.fromStation && segment.fromStation.nome} ({segment.fromStation && segment.fromStation.tipo}) -&gt; {segment.toStation && segment.toStation.nome} ({segment.toStation && segment.toStation.tipo})</span>}
-                                        {idx > 0 && segment.toLine && <p>Linea di Trasferimento: {segment.toLine.nome}</p>}
-                                        {segment.fromLine && <p>Linea: {segment.fromLine.nome}</p>}
-                                    </div>
-                                ))}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-          </Col>
-        </Row>
+        <Button onClick={this.handleSimulateTrip} className="my-4" style={{ width: '100%' }}>
+          Simula Viaggio
+        </Button>
+
+        {this.state.tripMessage && <p>{this.state.tripMessage}</p>}
+
+        {this.state.possibleRoutes.length > 0 && (
+          <div>
+            <h3>Percorsi Possibili</h3>
+            {this.state.possibleRoutes.map((route, index) => (
+              <div key={index} className="route">
+                {this.state.possibleRoutes.map((route, index) => (
+                  <li style={{ listStyleType:'none' }} key={index}>
+                      {route.segments.map((segment, idx) => (
+                        segment.fromStation && segment.toStation && (
+                          <div key={idx}>
+                            <p>Check-In: {this.state.stations.find(station => station.idStazione === this.state.selectedDepartureId)?.nome}</p>
+                            {idx >= 0 && <p>Check-In: {segment.fromStation && segment.fromStation.nome} ({segment.fromStation && segment.fromStation.tipo})</p>}
+                            {idx >= 0 && <p>Check-Out: {segment.toStation && segment.toStation.nome} ({segment.toStation && segment.toStation.tipo})</p>}
+                          </div>
+                        )
+                      ))}
+                      {route.segments.map((segment, idx) => (
+                        <div key={idx}>
+                            {segment.fromLine && <p>Linea: {segment.fromLine.nome}</p>}
+                            {segment.toLine && <p>Linea di Trasferimento: {segment.toLine.nome}</p>}
+                        </div>
+                      ))}
+                      <div>
+                        <p>Costo: €{this.state.cost}</p>
+                      </div>
+                      <div>
+                        <p>Nuovo saldo: €{this.state.cardUpdated.newBalance}</p>
+                      </div>
+                  </li>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
       </Container>
     );
   }

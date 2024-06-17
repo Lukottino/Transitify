@@ -25,19 +25,31 @@ app.get('/api/account/:accountId/cards', async (req, res) => {
   }
 });
 
-app.get('/api/clienti', async (req, res) => {
-  try {
-    const clients = await Db.getClients();
-    res.json(clients);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-});
+
 
 app.get('/api/accounts', async (req, res) => {
   try {
     const accounts = await Db.getAccounts();
     res.json(accounts);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+app.delete('/api/accounts/:id', async (req, res) => {
+  try {
+    const accountId = req.params.id;
+    const result = await Db.deleteAccount(accountId);
+    res.json(result);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+app.get('/api/clienti', async (req, res) => {
+  try {
+    const clients = await Db.getClients();
+    res.json(clients);
   } catch (error) {
     res.status(500).send(error);
   }
@@ -97,9 +109,9 @@ router.route('/stations').get((req, res) => {
 
 
 app.post('/api/simulate-trip', async (req, res) => {
-  const { departureId, arrivalId } = req.body;
+  const { departureId, arrivalId, selectedCardId } = req.body;
   try {
-    const tripData = await Db.simulateTrip(departureId, arrivalId);
+    const tripData = await Db.simulateTrip(departureId, arrivalId, selectedCardId);
     res.json(tripData);
   } catch (error) {
     console.error('Errore durante la simulazione del viaggio:', error);

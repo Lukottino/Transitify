@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Button, Card, Form, Table, Modal } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from "axios";
-
+import { useNavigate } from 'react-router-dom';
 class AdminPage extends Component {
     constructor(props){
         super(props)
@@ -42,12 +42,12 @@ class AdminPage extends Component {
             });
     }
 
-    handleShowModal = (entity, isEditing = false) => {
-        this.setState({ showModal: true, entityType: entity.entityType, isEditing: isEditing });
+    handleShowModal = (entity, entityType, isEditing = false) => {
+        this.setState({ showModal: true, entityType: entityType, isEditing: isEditing });
 
-        if (entity.entityType === 'client') {
+        if (entityType === 'client') {
             this.setState({ currentClient: entity });
-        } else if (entity.entityType === 'account') {
+        } else if (entityType === 'account') {
             this.setState({ currentAccount: entity });
         }
     }
@@ -123,7 +123,7 @@ class AdminPage extends Component {
     }
 
     handleDelete = (entityId, entityType) => {
-        if (entityType === 'client') {
+        if (entityType == 'client') {
             axios.delete(`http://localhost:3000/api/clienti/${entityId}`)
                 .then(res => {
                     this.fetchClients();
@@ -131,7 +131,8 @@ class AdminPage extends Component {
                 .catch(error => {
                     console.error("There was an error deleting the client!", error);
                 });
-        } else if (entityType === 'account') {
+        } else if (entityType == 'account') {
+            console.log(entityId)
             axios.delete(`http://localhost:3000/api/accounts/${entityId}`)
                 .then(res => {
                     this.fetchAccounts();
@@ -141,21 +142,29 @@ class AdminPage extends Component {
                 });
         }
     }
-    
+
+    changeRoute = (route) => {
+        window.location.href = "http://localhost:3001/" + route;
+    }
 
     render(){
         const { clients, accounts, showModal, currentClient, currentAccount, isEditing, entityType } = this.state;
 
         return(
             <>
-                <div className="container mt-5">
+                <div className="container mt-5" style={{ paddingTop: "30px" }}>
                     <h1>Admin Page</h1>
-                    <Button variant="primary" onClick={() => this.handleShowModal({ entityType: 'client' })}>
-                        Add New Client
-                    </Button>
-                    <Button variant="primary" className="ms-3" onClick={() => this.handleShowModal({ entityType: 'account' })}>
-                        Add New Account
-                    </Button>
+                    <div>
+                        <Button variant="primary" onClick={() => this.handleShowModal({ entityType: 'client' })}>
+                            Add New Client
+                        </Button>
+                        <Button variant="primary" className="ms-3" onClick={() => this.handleShowModal({ entityType: 'account' })}>
+                            Add New Account
+                        </Button>
+                        <Button variant="warning" className='ms-3' onClick={() => this.changeRoute("administration/statistics")}>
+                            Statistics
+                        </Button>
+                    </div>
 
                     <Table striped bordered hover className="mt-3">
                         <thead>
@@ -175,8 +184,8 @@ class AdminPage extends Component {
                                     <td>{entity.cognome}</td>
                                     <td>{entity.email}</td>
                                     <td>
-                                        <Button variant="warning" onClick={() => this.handleShowModal(entity, true)}>Edit</Button>{' '}
-                                        <Button variant="danger" onClick={() => this.handleDelete(entity.id, entityType)}>Delete</Button>
+                                        <Button variant="warning" onClick={() => this.handleShowModal(entity, "client", true)}>Edit</Button>{' '}
+                                        <Button variant="danger" onClick={() => this.handleDelete(entity.idCliente, "client")}>Delete</Button>
                                     </td>
                                 </tr>
                             ))}
@@ -190,7 +199,6 @@ class AdminPage extends Component {
                                 <th>Nome</th>
                                 <th>Cognome</th>
                                 <th>Tipo</th>
-                                {entityType === 'account' && <th>Balance</th>}
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -202,10 +210,9 @@ class AdminPage extends Component {
                                     <td>{entity.nome}</td>
                                     <td>{entity.cognome}</td>
                                     <td>{entity.tipo}</td>
-                                    {entityType === 'account' && <td>{entity.balance}</td>}
                                     <td>
-                                        <Button variant="warning" onClick={() => this.handleShowModal(entity, true)}>Edit</Button>{' '}
-                                        <Button variant="danger" onClick={() => this.handleDelete(entity.id, entityType)}>Delete</Button>
+                                        <Button variant="warning" onClick={() => this.handleShowModal(entity, "account", true)}>Edit</Button>{' '}
+                                        <Button variant="danger" onClick={() => this.handleDelete(entity.idAccount, "account")}>Delete</Button>
                                     </td>
                                 </tr>
                             ))}
@@ -215,7 +222,7 @@ class AdminPage extends Component {
 
                 <Modal show={showModal} onHide={this.handleCloseModal}>
                     <Modal.Header closeButton>
-                        <Modal.Title>{isEditing ? `Edit ${entityType === 'client' ? 'Client' : 'Account'}` : `Add New ${entityType === 'client' ? 'Client' : 'Account'}`}</Modal.Title>
+                        <Modal.Title>{isEditing ? `Edit ${entityType === 'client' ? 'client' : 'account'}` : `Add New ${entityType === 'client' ? 'client' : 'account'}`}</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
                         <Form onSubmit={this.handleSubmit}>

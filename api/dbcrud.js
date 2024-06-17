@@ -22,6 +22,16 @@ async function getAccounts() {
   }
 }
 
+async function deleteAccount(accountId) {
+  try {
+    await pool.execute('DELETE FROM ACCOUNT WHERE idAccount = ?', [accountId]);
+    return { accountId };
+  } catch (error) {
+    console.error('Errore durante l\'eliminazione dell\'account:', error);
+    throw error;
+  }
+}
+
 async function createClient(client) {
   try {
     const { nome, cognome, email } = client;
@@ -46,7 +56,7 @@ async function updateClient(clienteId, client) {
 
 async function deleteClient(clienteId) {
   try {
-    await pool.execute('DELETE FROM CLIENTE WHERE clienteId = ?', [clienteId]);
+    await pool.execute('DELETE FROM CLIENTE WHERE idCliente = ?', [clienteId]);
     return { clienteId };
   } catch (error) {
     console.error('Errore durante l\'eliminazione del cliente:', error);
@@ -76,7 +86,7 @@ async function getAccount(idAccount) {
 
 async function getStations() {
   try {
-    const [stations] = await pool.execute('SELECT idStazione, nome, tipo FROM stazione');
+    const [stations] = await pool.execute('SELECT idStazione, nome, tipo, idZona FROM stazione');
     const [lineStationsResult] = await pool.execute('SELECT idLinea, idStazione, ordine FROM linea_stazione ORDER BY idLinea, ordine;');
     const [lines] = await pool.execute('SELECT idLinea, nome FROM linea');
 
@@ -102,9 +112,12 @@ async function getStations() {
   }
 }
 
-async function simulateTrip(departureId, arrivalId) {
+async function simulateTrip(departureId, arrivalId, cardId) {
+  let connection;
   try {
     const { stations, lines, lineStations } = await getStations();
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
 
     const departureStation = stations.find(station => station.idStazione === departureId);
     const arrivalStation = stations.find(station => station.idStazione === arrivalId);
@@ -116,18 +129,145 @@ async function simulateTrip(departureId, arrivalId) {
     const directRoute = findDirectRoute(departureId, arrivalId, lineStations);
     
     if (directRoute) {
-      return { route: 'direct', line: directRoute.line, stations: [departureStation, arrivalStation] };
+      const zones = calculateZones([departureStation, arrivalStation]);
+      const cost = calculateCost(zones);
+
+      // Insert CHECKIN movement
+      await insertMovement(connection, cardId, departureId, 'CHECKIN');
+
+      const cardUpdated = await updateCardBalance(cardId, cost);
+
+      // Insert CHECKOUT movement
+      await insertMovement(connection, cardId, arrivalId, 'CHECKOUT');
+
+      // Insert trip record
+      const tripData = {
+        cardId,
+        dataInizio: new Date(),
+        dataFine: new Date(),
+        prezzo: cost,
+        stato: 'completato'
+      };
+      const [insertTripResult] = await connection.execute('INSERT INTO VIAGGIO (cardId, dataInizio, dataFine, prezzo, stato) VALUES (?, ?, ?, ?, ?)', [tripData.cardId, tripData.dataInizio, tripData.dataFine, tripData.prezzo, tripData.stato]);
+      const viaggioId = insertTripResult.insertId;
+
+      // Update movimento with viaggioId
+      await updateMovementWithViaggioId(connection, viaggioId, departureId, 'CHECKIN');
+      await updateMovementWithViaggioId(connection, viaggioId, arrivalId, 'CHECKOUT');
+
+      await connection.commit();
+
+      return { route: 'direct', line: directRoute.line, stations: [departureStation, arrivalStation], zones, cost, cardUpdated, viaggioId };
     }
 
+    // Handle transfer routes
     const transferRoutes = findTransferRoutes(departureId, arrivalId, stations, lines, lineStations);
-    
+
     if (transferRoutes.length > 0) {
-      return { route: 'transfer', transferRoutes };
+      const allStations = transferRoutes.flatMap(route => route.segments.flatMap(segment => [segment.fromStation, segment.toStation])).filter(station => station);
+      const zones = calculateZones(allStations);
+      const cost = calculateCost(zones);
+
+      // Insert CHECKIN movement
+      await insertMovement(connection, cardId, departureId, 'CHECKIN');
+
+      const cardUpdated = await updateCardBalance(cardId, cost);
+
+      // Insert transfer movement for each transfer station
+      for (const route of transferRoutes) {
+        console.log("idStazione: ", route.transferStation.idStazione)
+        await insertMovement(connection, cardId, route.transferStation.idStazione, 'CHECKIN');
+      }
+
+      // Insert CHECKOUT movement
+      await insertMovement(connection, cardId, arrivalId, 'CHECKOUT');
+
+      // Insert trip record
+      const tripData = {
+        cardId,
+        dataInizio: new Date(),
+        dataFine: new Date(),
+        prezzo: cost,
+        stato: 'completato'
+      };
+      const [insertTripResult] = await connection.execute('INSERT INTO VIAGGIO (cardId, dataInizio, dataFine, prezzo, stato) VALUES (?, ?, ?, ?, ?)', [tripData.cardId, tripData.dataInizio, tripData.dataFine, tripData.prezzo, tripData.stato]);
+      const viaggioId = insertTripResult.insertId;
+      console.log(insertTripResult.insertId)
+
+      // Update movimento with viaggioId for CHECKIN, CHECKOUT
+      await updateMovementWithViaggioId(connection, viaggioId, departureId, 'CHECKIN');
+      await updateMovementWithViaggioId(connection, viaggioId, arrivalId, 'CHECKOUT');
+      for (const route of transferRoutes) {
+        await updateMovementWithViaggioId(connection, viaggioId, route.transferStation.idStazione, 'CHECKIN');
+      }
+
+      await connection.commit();
+
+      return { route: 'transfer', transferRoutes, zones, cost, cardUpdated, viaggioId };
     }
 
     throw new Error('Nessun percorso trovato');
   } catch (error) {
+    if (connection) {
+      await connection.rollback();
+    }
     console.error('Errore durante la simulazione del viaggio:', error);
+    throw error;
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
+}
+
+async function insertMovement(connection, cardId, stationId, tipoMovimento) {
+  const movimentoData = {
+    idViaggio: null, // Initially set to null, will be updated after creating the trip
+    dataOra: new Date(),
+    tipoMovimento,
+    idStazione: stationId
+  };
+  const sql = 'INSERT INTO MOVIMENTO (idViaggio, dataOra, tipoMovimento, idStazione) VALUES (?, ?, ?, ?)';
+  const values = [movimentoData.idViaggio, movimentoData.dataOra, movimentoData.tipoMovimento, movimentoData.idStazione];
+
+  await connection.execute(sql, values);
+}
+
+async function updateMovementWithViaggioId(connection, viaggioId, stationId, tipoMovimento) {
+  const [updateResult] = await connection.execute('UPDATE MOVIMENTO SET idViaggio = ? WHERE idStazione = ? AND tipoMovimento = ? AND idViaggio IS NULL', [viaggioId, stationId, tipoMovimento]);
+  return updateResult.affectedRows > 0;
+}
+
+function calculateZones(stations) {
+  const zones = new Set();
+  stations.filter(station => station !== undefined).forEach(station => zones.add(station.idZona));
+  return zones.size;
+}
+
+function calculateCost(zones) {
+  const costPerZone = 1.50; // Ad esempio, 1.50 euro per zona
+  return zones * costPerZone;
+}
+
+async function updateCardBalance(cardId, cost) {
+  try {
+    console.log("carta passata: ", cardId)
+    const [rows] = await pool.execute('SELECT saldo FROM card WHERE cardId = ?', [cardId]);
+    if (rows.length === 0) {
+      throw new Error('Carta non trovata');
+    }
+
+    const currentBalance = rows[0].saldo;
+    if (currentBalance < cost) {
+      throw new Error('Saldo insufficiente');
+    }
+
+    const newBalance = currentBalance - cost;
+    await pool.execute('UPDATE card SET saldo = ? WHERE cardId = ?', [newBalance, cardId]);
+
+    return { cardId, oldBalance: currentBalance, newBalance };
+  } catch (error) {
+    console.error('Errore durante l\'aggiornamento del saldo della carta:', error);
     throw error;
   }
 }
@@ -139,7 +279,6 @@ function findDirectRoute(departureId, arrivalId, lineStations) {
     return departureIndex !== -1 && arrivalIndex !== -1 && departureIndex < arrivalIndex;
   });
 }
-
 
 function findTransferRoutes(departureId, arrivalId, stations, lines, lineStations) {
   const transferRoutes = [];
@@ -190,8 +329,6 @@ function findTransferRoutes(departureId, arrivalId, stations, lines, lineStation
 
   return transferRoutes;
 }
-
-
 
 async function register(email, password, nome, cognome, tipo, callback = () => {}) {
   try {
@@ -293,7 +430,6 @@ async function postLogin(email, password, callback) {
     console.error('Errore durante il login:', err);
     return callback(err);
   }
-
 }
 
 module.exports = {
@@ -308,5 +444,6 @@ module.exports = {
   updateClient,
   getClient,
   getAccounts,
-  getUniqueCards
+  getUniqueCards,
+  deleteAccount
 };
