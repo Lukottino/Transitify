@@ -43,6 +43,15 @@ app.get('/api/account/:accountId/average-cost', async (req, res) => {
   }
 });
 
+app.get('/api/account/:accountId/most-used-transport', async (req, res) => {
+  try {
+    const transport = await Db.getMostUsedTransport(req.params.accountId);
+    res.json(transport);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 app.get('/api/accounts', async (req, res) => {
   try {
     const accounts = await Db.getAccounts();

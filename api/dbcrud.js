@@ -2,6 +2,29 @@ const pool = require('./dbconfig');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+async function getMostUsedTransport(accountId) {
+  try {
+    const [rows]= await pool.execute(
+      `SELECT movimenti.tipoStazione, COUNT(*) AS utilizzi
+       FROM (
+           SELECT s.tipo AS tipoStazione
+           FROM MOVIMENTO m
+           JOIN STAZIONE s ON m.idStazione = s.idStazione
+           JOIN VIAGGIO v ON m.idViaggio = v.idViaggio
+           JOIN CARD c ON v.cardId = c.cardId
+           JOIN UNIQUE_CARD uc ON c.cardId = uc.cardId
+           JOIN ACCOUNT a ON uc.idAccount = a.idAccount
+           WHERE a.idAccount = ? AND m.tipoMovimento = 'CHECKIN'
+       ) as movimenti
+       GROUP BY tipoStazione
+       ORDER BY utilizzi DESC`, [accountId]);
+    return rows;
+  } catch (error) {
+    console.error('Errore durante il recupero del mezzo pubblico più utilizzato:', error);
+    throw error;
+  }
+}
+
 async function getAverageCost(accountId) {
   try {
     const [rows]= await pool.execute(
@@ -503,5 +526,6 @@ module.exports = {
   getUniqueCards,
   deleteAccount,
   getTopRoutes,
-  getAverageCost
+  getAverageCost,
+  getMostUsedTransport
 };

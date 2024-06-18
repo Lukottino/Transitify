@@ -9,7 +9,7 @@ class ProfilePage extends Component{
         this.state = {
           topRoutes: [],
           averageCost: 0,
-          mostUsedTransport: '',
+          mostUsedTransport: [],
           cards: [],
           accountId: '',
           reloadAmount: 0,
@@ -42,12 +42,12 @@ class ProfilePage extends Component{
           const [routesResponse, costResponse, transportResponse] = await Promise.all([
             axios.get(`http://localhost:3000/api/account/${this.state.accountId}/top-routes`),
             axios.get(`http://localhost:3000/api/account/${this.state.accountId}/average-cost`),
-            //axios.get(`http://localhost:3000/api/account/${this.state.accountId}/most-used-transport`)
+            axios.get(`http://localhost:3000/api/account/${this.state.accountId}/most-used-transport`)
           ]);
           this.setState({
             topRoutes: routesResponse.data,
             averageCost: Math.round(costResponse.data[0].prezzoMedio * 100) / 100,
-            //mostUsedTransport: transportResponse.data.mostUsedTransport
+            mostUsedTransport: transportResponse.data
           });
         } catch (error) {
           console.error('Errore durante il recupero delle statistiche:', error);
@@ -136,7 +136,22 @@ class ProfilePage extends Component{
                 <h4>Costo medio per viaggio</h4>
                 <p>{averageCost}€</p>
                 <h4>Tipo di mezzo più utilizzato</h4>
-                <p>{mostUsedTransport}</p>
+                <Table striped bordered hover>
+                  <thead>
+                    <tr>
+                      <th>Tipo Mezzo</th>
+                      <th>Utilizzi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mostUsedTransport.map((type, index) => (
+                      <tr key={index}>
+                        <td>{type.tipoStazione}</td>
+                        <td>{type.utilizzi}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
               </Col>
             </Row>
           </Container>
