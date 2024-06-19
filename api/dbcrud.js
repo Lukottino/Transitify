@@ -2,12 +2,23 @@ const pool = require('./dbconfig');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+async function updateAccount(accountId, account) {
+  try {
+    const newPassword = await bcrypt.hash(account.password, 10)
+    await pool.execute('UPDATE ACCOUNT SET email = ?, nome = ?, cognome = ?, password = ? WHERE idAccount = ?', [account.email, account.nome, account.cognome, newPassword, accountId]);
+    return { accountId, account};
+  } catch (error) {
+    console.error('Errore durante l\'aggiornamento dell\'account :', error);
+    throw error;
+  }
+}
+
 async function reloadCardBalance(cardId, reloadAmount) {
   try {
     await pool.execute('UPDATE CARD SET saldo = ? WHERE cardId = ?', [reloadAmount, cardId]);
     return { reloadAmount, cardId};
   } catch (error) {
-    console.error('Errore durante l\'aggiornamento del cliente:', error);
+    console.error('Errore durante l\'aggiornamento del saldo:', error);
     throw error;
   }
 }
@@ -183,7 +194,7 @@ async function createClient(client) {
 async function updateClient(clienteId, client) {
   try {
     const { nome, cognome, email } = client;
-    await pool.execute('UPDATE CLIENTE SET nome = ?, cognome = ?, email = ? WHERE clienteId = ?', [nome, cognome, email, clienteId]);
+    await pool.execute('UPDATE CLIENTE SET nome = ?, cognome = ?, email = ? WHERE idCliente = ?', [nome, cognome, email, clienteId]);
     return { clienteId, nome, cognome, email };
   } catch (error) {
     console.error('Errore durante l\'aggiornamento del cliente:', error);
@@ -597,5 +608,6 @@ module.exports = {
   getMostUsedTransport,
   hasValidSubscription,
   reloadCardBalance,
-  subscribeCard
+  subscribeCard,
+  updateAccount
 };

@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
-import { Button, Card, Form, Table, Modal } from 'react-bootstrap';
+import { Button, Form, Table, Modal } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from "axios";
-import { useNavigate } from 'react-router-dom';
 class AdminPage extends Component {
     constructor(props){
         super(props)
@@ -11,9 +10,9 @@ class AdminPage extends Component {
             accounts: [],
             showModal: false,
             currentClient: { clienteId: "", nome: "", cognome: "", email: "" },
-            currentAccount: { accountId: "", accountName: "", balance: 0 },
+            currentAccount: { accountId: "", accountName: "", accountSurname: "", accountEmail: "", accountPassword: "" },
             isEditing: false,
-            entityType: 'client' // 'client' or 'account'
+            entityType: 'client'
         }
     }
 
@@ -81,7 +80,7 @@ class AdminPage extends Component {
 
         if (entityType === 'client') {
             if (isEditing) {
-                axios.put(`http://localhost:3000/api/clienti/${currentClient.clienteId}`, currentClient)
+                axios.put(`http://localhost:3000/api/clienti/${currentClient.idCliente}`, currentClient)
                     .then(res => {
                         this.fetchClients();
                         this.handleCloseModal();
@@ -101,7 +100,7 @@ class AdminPage extends Component {
             }
         } else if (entityType === 'account') {
             if (isEditing) {
-                axios.put(`http://localhost:3000/api/accounts/${currentAccount.accountId}`, currentAccount)
+                axios.put(`http://localhost:3000/api/accounts/${currentAccount.idAccount}`, currentAccount)
                     .then(res => {
                         this.fetchAccounts();
                         this.handleCloseModal();
@@ -123,7 +122,7 @@ class AdminPage extends Component {
     }
 
     handleDelete = (entityId, entityType) => {
-        if (entityType == 'client') {
+        if (entityType === 'client') {
             axios.delete(`http://localhost:3000/api/clienti/${entityId}`)
                 .then(res => {
                     this.fetchClients();
@@ -131,7 +130,7 @@ class AdminPage extends Component {
                 .catch(error => {
                     console.error("There was an error deleting the client!", error);
                 });
-        } else if (entityType == 'account') {
+        } else if (entityType === 'account') {
             console.log(entityId)
             axios.delete(`http://localhost:3000/api/accounts/${entityId}`)
                 .then(res => {
@@ -259,23 +258,43 @@ class AdminPage extends Component {
 
                             {entityType === 'account' && (
                                 <>
-                                    <Form.Group className="mb-3" controlId="formAccountName">
-                                        <Form.Label>Account Name</Form.Label>
+                                    <Form.Group className="mb-3" controlId="formNome">
+                                        <Form.Label>Nome</Form.Label>
                                         <Form.Control 
                                             type="text" 
-                                            placeholder="Enter account name" 
-                                            name="accountName"
-                                            value={currentAccount.accountName}
+                                            placeholder="Nome" 
+                                            name="nome"
+                                            value={currentAccount.nome}
                                             onChange={this.handleChange} />
                                     </Form.Group>
 
-                                    <Form.Group className="mb-3" controlId="formBalance">
-                                        <Form.Label>Balance</Form.Label>
+                                    <Form.Group className="mb-3" controlId="formCognome">
+                                        <Form.Label>Cognome</Form.Label>
                                         <Form.Control 
-                                            type="number" 
-                                            placeholder="Enter balance" 
-                                            name="balance"
-                                            value={currentAccount.balance}
+                                            type="text" 
+                                            placeholder="Cognome" 
+                                            name="cognome"
+                                            value={currentAccount.cognome}
+                                            onChange={this.handleChange} />
+                                    </Form.Group>
+
+                                    <Form.Group className="mb-3" controlId="formEmail">
+                                        <Form.Label>Email</Form.Label>
+                                        <Form.Control 
+                                            type="email" 
+                                            placeholder="Email" 
+                                            name="email"
+                                            value={currentAccount.email}
+                                            onChange={this.handleChange} />
+                                    </Form.Group>
+
+                                    <Form.Group className="mb-3" controlId="formPassword">
+                                        <Form.Label>Password</Form.Label>
+                                        <Form.Control 
+                                            type="text" 
+                                            placeholder="Password" 
+                                            name="password"
+                                            value={currentAccount.password}
                                             onChange={this.handleChange} />
                                     </Form.Group>
                                 </>

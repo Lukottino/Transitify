@@ -82,7 +82,7 @@ class TravelPage extends Component {
   }
 
   handleCardChange = (e) => {
-    this.state.selectedCardId = parseInt(e.target.value);
+    this.setState({ selectedCardId: e.target.value });
     console.log("card: ", this.state.selectedCardId)
   };
 
@@ -91,7 +91,7 @@ class TravelPage extends Component {
 
     let cardType = "UNIQUE";
 
-    if(selectedSharedCardId != '') {
+    if(selectedSharedCardId !== '') {
       selectedCardId = selectedSharedCardId;
       cardType = "SHARED";
     }

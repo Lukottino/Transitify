@@ -32,7 +32,7 @@ class Register extends React.Component {
         .then(res=> {
             console.log(res);
             console.log(res.data);
-            if(res.data.status==200)
+            if(res.data.status===200)
             {
                 this.props.handleLoginSuccess(res.data.token); 
                 window.location.href = "http://localhost:3001/";

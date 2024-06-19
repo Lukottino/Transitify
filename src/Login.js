@@ -17,7 +17,6 @@ class Login extends React.Component {
         this.ExecQuery();
     }
     
-
     ExecQuery() {
         var payload = {
             email: this.state.email,
@@ -27,7 +26,7 @@ class Login extends React.Component {
         .then(res=> {
             console.log(res);
             console.log(res.data);
-            if(res.data.status==200)
+            if(res.data.status===200)
             {
                 this.props.handleLoginSuccess({ token: res.data.token, type: res.data.type, accountId: res.data.accountId}); 
                 window.location.href = "http://localhost:3001/trip";

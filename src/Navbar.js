@@ -16,10 +16,12 @@ function CustomNavbar() {
         }
     }, []);
 
+    /*
     const handleLoginSuccess = (token) => {
         setIsAuthenticated(true);
         localStorage.setItem('token', token);
     };
+    */
 
     const handleLogout = () => {
         setIsAuthenticated(false);

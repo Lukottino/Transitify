@@ -6,7 +6,7 @@ const RedirectRoute = ({ children }) => {
     const type = localStorage.getItem('type');
     console.log(type)
 
-    if(type == "ADMIN"){
+    if(type === "ADMIN"){
         return <Navigate to="/administration" />;
     }
 

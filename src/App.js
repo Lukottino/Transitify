@@ -11,7 +11,7 @@ import AdminPage from './AdminPage';
 import ProfilePage from './ProfilePage';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [, setIsAuthenticated] = React.useState(false);
 
   const handleLoginSuccess = ({ token, type, accountId }) => {
     console.log("ACCOUNT ID: ?", accountId)

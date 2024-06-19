@@ -83,7 +83,7 @@ class ProfilePage extends Component {
 
   handleSubscribe = async (cardId) => {
     try {
-      this.state.subscribeMessage = await axios.post(`http://localhost:3000/api/cards/${cardId}/subscribe`, { zone: this.state.subscriptionZone });
+      this.setState({ subscribeMessage: await axios.post(`http://localhost:3000/api/cards/${cardId}/subscribe`, { zone: this.state.subscriptionZone }) });
       this.fetchCards();
       this.setState({ subscribeMessage: `Abbonato alla zona ${this.state.subscriptionZone}!` });
     } catch (error) {

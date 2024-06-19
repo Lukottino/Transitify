@@ -33,6 +33,18 @@ app.post('/api/cards/:cardId/subscribe', async (req, res) => {
   }
 });
 
+app.put('/api/accounts/:accountId', async (req, res) => {
+  try {
+    console.log("ACCOUNTID: ", req.params.accountId)
+    const accountId = req.params.accountId;
+    const account = req.body;
+    const result = await Db.updateAccount(accountId, account);
+    res.json(result);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 app.put('/api/cards/:cardId/reload', async (req, res) => {
   try {
     const cardId = req.params.cardId;
@@ -172,8 +184,6 @@ app.post('/api/simulate-trip', async (req, res) => {
     res.status(500).json({ error: 'Errore durante la simulazione del viaggio.' });
   }
 });
-
-
 
 router.route('/login').post((req, res) => {
   let { email, password } = req.body;
