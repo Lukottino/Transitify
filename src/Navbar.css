@@ -1,0 +1,16 @@
+.custom-navbar {
+    background-color: #121214 !important; /* Colore di sfondo blu scuro */
+    border-bottom: 2px solid #1b1919; /* Bordo inferiore blu scuro */
+}
+
+.custom-button {
+    color: white !important; /* Colore del testo bianco */
+    background-color: #007bff !important; /* Colore di sfondo blu (come il pulsante Login) */
+    border-color: #007bff !important; /* Colore del bordo blu */
+    border-radius: 15px !important; /* Bordo arrotondato */
+}
+
+.custom-button:hover {
+    background-color: #0056b3 !important; /* Colore di sfondo blu scuro al passaggio del mouse */
+    border-color: #0056b3 !important; /* Colore del bordo blu scuro al passaggio del mouse */
+}

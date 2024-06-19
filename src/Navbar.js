@@ -3,6 +3,7 @@ import { Button, Navbar, Form, Row, Col } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useNavigate } from 'react-router-dom';
 import logo from "./resources/transitify.png";
+import './Navbar.css';
 
 function CustomNavbar() {
     let navigate = useNavigate(); 
@@ -33,7 +34,7 @@ function CustomNavbar() {
 
     return (
         <>
-            <Navbar bg='dark' variant='dark' className="justify-content-between fixed-top">
+            <Navbar bg='dark' variant='dark' className="justify-content-between fixed-top custom-navbar">
                 <Navbar.Brand href="/" style={{ paddingLeft: "10px" }}>
                     <img
                         src={logo}
@@ -47,11 +48,11 @@ function CustomNavbar() {
                         <Col xs="auto">
                             {isAuthenticated ? (
                                 <>
-                                    <Button onClick={handleLogout} style={{ borderColor: "transparent", height: "100%px", borderRadius: "10px" }}>Logout</Button>
-                                    <Button onClick={() => routeChange("/profile")} style={{ borderColor: "transparent", height: "100%px", borderRadius: "10px", marginLeft: "10px" }}>Profile</Button>
+                                    <Button onClick={handleLogout} className="custom-button">Logout</Button>
+                                    <Button onClick={() => routeChange("/profile")} className="custom-button" style={{ marginLeft: "10px" }}>Profile</Button>
                                 </>
                             ) : (
-                                <Button onClick={() => routeChange("/login")} style={{ borderColor: "transparent", height: "100%px", borderRadius: "10px" }}>Login</Button>
+                                <Button onClick={() => routeChange("/login")} className="custom-button">Login</Button>
                             )}
                         </Col>
                     </Row>

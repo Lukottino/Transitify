@@ -1,0 +1,158 @@
+/* Definizione dei colori */
+:root {
+    --primary-dark: #1a1a1a; /* Colore di sfondo principale */
+    --secondary-dark: #111;  /* Colore di sfondo secondario */
+    --accent-color: #007bff; /* Colore di accento, simile al pulsante Login */
+    --text-color: white;     /* Colore del testo */
+  }
+  
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+  }
+  
+  .homepage-container {
+    background: var(--primary-dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
+  }
+  
+  .content {
+    width: 100%;
+    max-width: 800px;
+    text-align: center;
+    padding-bottom: 40px; /* Aggiungi spazio per il footer */
+  }
+  
+  .text-section {
+    margin-top: 20px;
+  }
+  
+  .title {
+    text-shadow: 0 0 40px black;
+    font-weight: bold;
+    font-size: 80px;
+    margin-bottom: 10px;
+  }
+  
+  .description {
+    text-shadow: 0 0 20px black;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 1.5;
+    margin: 0 auto;
+    max-width: 600px;
+  }
+  
+  .button-section-vertical {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .login-button {
+    color: var(--text-color);
+    border-color: var(--text-color);
+    border-radius: 20px;
+    margin-bottom: 10px;
+  }
+  
+  .register-label {
+    text-shadow: 0 0 20px black;
+    font-weight: 500;
+    font-size: 14px;
+    margin-bottom: 5px;
+    margin-top: 5px;
+  }
+  
+  .register-link {
+    text-decoration: none;
+    text-shadow: 0 0 20px black;
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--accent-color);
+  }
+  
+  /* Sezione Viaggio */
+  .trip-section {
+    background: linear-gradient(135deg, var(--primary-dark), var(--secondary-dark));
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text-color);
+  }
+  
+  .trip-content {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .trip-title {
+    font-size: 40px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-shadow: 0 0 30px black;
+  }
+  
+  .trip-description {
+    font-size: 18px;
+    margin-bottom: 30px;
+    text-shadow: 0 0 20px black;
+  }
+  
+  .trip-button {
+    color: var(--text-color);
+    border-color: var(--text-color);
+    border-radius: 20px;
+  }
+  
+  /* Footer */
+  .footer {
+    background-color: var(--secondary-dark);
+    color: var(--text-color);
+    text-align: center;
+    padding: 20px 0;
+  }
+  
+  .footer-content {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .footer-content p {
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  .footer-content a {
+    display: block;
+    color: #bbb;
+    text-decoration: none;
+    margin: 5px 0;
+  }
+  
+  .footer-content a:hover {
+    color: var(--accent-color);
+  }
+  
+  .social-links {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .social-links a {
+    color: #bbb;
+    text-decoration: none;
+  }
+  
+  .social-links a:hover {
+    color: var(--accent-color);
+  }
+  
