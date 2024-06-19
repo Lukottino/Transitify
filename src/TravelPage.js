@@ -13,6 +13,7 @@ class TravelPage extends Component {
       selectedDepartureId: '',
       selectedArrivalId: '',
       selectedCardId: '',
+      selectedSharedCardId : '',
       tripMessage: '',
       possibleRoutes: [],
       cards: [],
@@ -76,20 +77,32 @@ class TravelPage extends Component {
     this.setState({ selectedArrivalId: selectedArrivalId });
   };
 
+  handleSharedCardChange = (e) => {
+    this.setState({ selectedSharedCardId: e.target.value });
+  }
+
   handleCardChange = (e) => {
     this.state.selectedCardId = parseInt(e.target.value);
     console.log("card: ", this.state.selectedCardId)
   };
 
   handleSimulateTrip = async () => {
-    const { selectedDepartureId, selectedArrivalId, selectedCardId } = this.state;
+    let { selectedDepartureId, selectedArrivalId, selectedCardId, selectedSharedCardId } = this.state;
+
+    let cardType = "UNIQUE";
+
+    if(selectedSharedCardId != '') {
+      selectedCardId = selectedSharedCardId;
+      cardType = "SHARED";
+    }
 
     if (selectedDepartureId && selectedArrivalId && selectedCardId) {
       try {
         const response = await axios.post('http://localhost:3000/api/simulate-trip', {
           departureId: selectedDepartureId,
           arrivalId: selectedArrivalId,
-          selectedCardId: selectedCardId
+          selectedCardId: selectedCardId,
+          cardType: cardType
         });
 
         const tripData = response.data;
@@ -139,7 +152,7 @@ class TravelPage extends Component {
       <Container className="my-4" style={{ paddingTop: '40px' }}>
         <h1>Simulazione dei Viaggi</h1>
         <Row>
-          <Col md={4}>
+          <Col md={3}>
             <Form.Group controlId="departureStation">
               <Form.Label>Stazione di Partenza</Form.Label>
               <Form.Control as="select" value={this.state.selectedDepartureId} onChange={this.handleDepartureChange}>
@@ -152,7 +165,7 @@ class TravelPage extends Component {
               </Form.Control>
             </Form.Group>
           </Col>
-          <Col md={4}>
+          <Col md={3}>
             <Form.Group controlId="arrivalStation">
               <Form.Label>Stazione di Arrivo</Form.Label>
               <Form.Control as="select" value={this.state.selectedArrivalId} onChange={this.handleArrivalChange}>
@@ -165,7 +178,7 @@ class TravelPage extends Component {
               </Form.Control>
             </Form.Group>
           </Col>
-          <Col md={4}>
+          <Col md={3}>
             <Form.Group controlId="cards">
               <Form.Label>Carte</Form.Label>
               <Form.Control as="select" value={this.state.selectedCardId} onChange={this.handleCardChange}>
@@ -176,6 +189,12 @@ class TravelPage extends Component {
                   </option>
                 ))}
               </Form.Control>
+            </Form.Group>
+          </Col>
+          <Col md={3}>
+            <Form.Group controlId="sharedCard">
+              <Form.Label>Numero Carta</Form.Label>
+              <Form.Control type="text" value={this.state.selectedSharedCardId} onChange={this.handleSharedCardChange} placeholder="Numero della carta shared" />
             </Form.Group>
           </Col>
         </Row>

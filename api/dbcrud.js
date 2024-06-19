@@ -2,6 +2,40 @@ const pool = require('./dbconfig');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+async function reloadCardBalance(cardId, reloadAmount) {
+  try {
+    await pool.execute('UPDATE CARD SET saldo = ? WHERE cardId = ?', [reloadAmount, cardId]);
+    return { reloadAmount, cardId};
+  } catch (error) {
+    console.error('Errore durante l\'aggiornamento del cliente:', error);
+    throw error;
+  }
+}
+
+async function hasValidSubscription(cardId, requiredZones) {
+  try {
+    const [rows] = await pool.execute(
+      `SELECT idZona FROM ABBONAMENTO_ZONA az
+       JOIN ABBONAMENTO a ON az.abbonamentoId = a.abbonamentoId
+       JOIN UNIQUE_CARD uc ON a.abbonamentoId = uc.abbonamentoId
+       WHERE uc.cardId = ? AND a.scadenza > NOW()`,
+      [cardId]
+    );
+
+    const subscribedZones = rows.map(row => row.idZona);
+    const requiredZonesArray = [...requiredZones];
+    console.log("SUB ZONES:", subscribedZones)
+    const hasSubscription = requiredZonesArray.every(zone => subscribedZones.includes(zone));
+    console.log("HAS SUB: ", hasSubscription)
+
+    return hasSubscription;
+  } catch (error) {
+    console.error('Errore durante il controllo dell\'abbonamento:', error);
+    throw error;
+  }
+}
+
+
 async function getMostUsedTransport(accountId) {
   try {
     const [rows]= await pool.execute(
@@ -68,7 +102,8 @@ async function getTopRoutes(accountId) {
         INNER JOIN (SELECT idViaggio, idAccount FROM unique_card c
               LEFT JOIN viaggio v ON c.cardId = v.cardId) Acc ON Acc.idViaggio = Tratte.IdViaggio
         WHERE Acc.idAccount = ?
-        GROUP BY s1.Nome, s2.Nome`, [accountId]);
+        GROUP BY s1.Nome, s2.Nome
+        ORDER BY Frequenza DESC`, [accountId]);
     
     return rows;
   } catch (error) {
@@ -187,7 +222,7 @@ async function getStations() {
   }
 }
 
-async function simulateTrip(departureId, arrivalId, cardId) {
+async function simulateTrip(departureId, arrivalId, cardId, cardType) {
   let connection;
   try {
     const { stations, lines, lineStations } = await getStations();
@@ -205,17 +240,22 @@ async function simulateTrip(departureId, arrivalId, cardId) {
     
     if (directRoute) {
       const zones = calculateZones([departureStation, arrivalStation], "direct");
-      const cost = calculateCost(zones);
+      const zonesArray = new Set();
+      [departureStation, arrivalStation].filter(station => station !== undefined).forEach(station => zonesArray.add(station.idZona))
+      console.log("req zones:", zonesArray)
+      let cardUpdated = '';
+      let cost = '';
+      if(cardType == "UNIQUE"){
+        const hasSubscription = await hasValidSubscription(cardId, zonesArray);
+        cost = hasSubscription ? 0 : calculateCost(zones);
+      }else if (cardType == "SHARED"){
+        cost = calculateCost(zones);
+      }
 
-      // Insert CHECKIN movement
       await insertMovement(connection, cardId, departureId, 'CHECKIN');
-
-      const cardUpdated = await updateCardBalance(cardId, cost);
-
-      // Insert CHECKOUT movement
+      cardUpdated = await updateCardBalance(cardId, cost);
       await insertMovement(connection, cardId, arrivalId, 'CHECKOUT');
 
-      // Insert trip record
       const tripData = {
         cardId,
         dataInizio: new Date(),
@@ -226,7 +266,6 @@ async function simulateTrip(departureId, arrivalId, cardId) {
       const [insertTripResult] = await connection.execute('INSERT INTO VIAGGIO (cardId, dataInizio, dataFine, prezzo, stato) VALUES (?, ?, ?, ?, ?)', [tripData.cardId, tripData.dataInizio, tripData.dataFine, tripData.prezzo, tripData.stato]);
       const viaggioId = insertTripResult.insertId;
 
-      // Update movimento with viaggioId
       await updateMovementWithViaggioId(connection, viaggioId, departureId, 'CHECKIN');
       await updateMovementWithViaggioId(connection, viaggioId, arrivalId, 'CHECKOUT');
 
@@ -235,29 +274,31 @@ async function simulateTrip(departureId, arrivalId, cardId) {
       return { route: 'direct', line: directRoute.line, stations: [departureStation, arrivalStation], zones, cost, cardUpdated, viaggioId };
     }
 
-    // Handle transfer routes
     const transferRoutes = findTransferRoutes(departureId, arrivalId, stations, lines, lineStations);
 
     if (transferRoutes.length > 0) {
       const allStations = transferRoutes.flatMap(route => route.segments.flatMap(segment => [segment.fromStation, segment.toStation])).filter(station => station);
       const zones = calculateZones(allStations, "transfer");
-      const cost = calculateCost(zones);
+      const zonesArray = new Set();
+      stations.filter(station => station !== undefined).forEach(station => zonesArray.add(station.idZona))
+      let cardUpdated = '';
+      let cost = '';
+      if(cardType == "UNIQUE"){
+        const hasSubscription = await hasValidSubscription(cardId, zonesArray);
+        cost = hasSubscription ? 0 : calculateCost(zones);
+      }else if (cardType == "SHARED"){
+        cost = calculateCost(zones);
+      }
 
-      // Insert CHECKIN movement
       await insertMovement(connection, cardId, departureId, 'CHECKIN');
+      cardUpdated = await updateCardBalance(cardId, cost);
 
-      const cardUpdated = await updateCardBalance(cardId, cost);
-
-      // Insert transfer movement for each transfer station
       for (const route of transferRoutes) {
-        console.log("idStazione: ", route.transferStation.idStazione)
         await insertMovement(connection, cardId, route.transferStation.idStazione, 'CHECKIN');
       }
 
-      // Insert CHECKOUT movement
       await insertMovement(connection, cardId, arrivalId, 'CHECKOUT');
 
-      // Insert trip record
       const tripData = {
         cardId,
         dataInizio: new Date(),
@@ -267,9 +308,7 @@ async function simulateTrip(departureId, arrivalId, cardId) {
       };
       const [insertTripResult] = await connection.execute('INSERT INTO VIAGGIO (cardId, dataInizio, dataFine, prezzo, stato) VALUES (?, ?, ?, ?, ?)', [tripData.cardId, tripData.dataInizio, tripData.dataFine, tripData.prezzo, tripData.stato]);
       const viaggioId = insertTripResult.insertId;
-      console.log(insertTripResult.insertId)
 
-      // Update movimento with viaggioId for CHECKIN, CHECKOUT
       await updateMovementWithViaggioId(connection, viaggioId, departureId, 'CHECKIN');
       await updateMovementWithViaggioId(connection, viaggioId, arrivalId, 'CHECKOUT');
       for (const route of transferRoutes) {
@@ -294,6 +333,7 @@ async function simulateTrip(departureId, arrivalId, cardId) {
     }
   }
 }
+
 
 async function insertMovement(connection, cardId, stationId, tipoMovimento) {
   const movimentoData = {
@@ -527,5 +567,7 @@ module.exports = {
   deleteAccount,
   getTopRoutes,
   getAverageCost,
-  getMostUsedTransport
+  getMostUsedTransport,
+  hasValidSubscription,
+  reloadCardBalance
 };

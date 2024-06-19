@@ -16,6 +16,23 @@ router.use((request, response, next) => {
   next();
 });
 
+// Avvia il server
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});
+
+app.put('/api/cards/:cardId/reload', async (req, res) => {
+  try {
+    const cardId = req.params.cardId;
+    const reloadAmount = req.body.newBalance;
+    console.log(reloadAmount)
+    const result = await Db.reloadCardBalance(cardId, reloadAmount);
+    res.json(result);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 app.get('/api/account/:accountId/cards', async (req, res) => {
   try {
     const cards = await Db.getUniqueCards(req.params.accountId);
@@ -134,9 +151,9 @@ router.route('/stations').get((req, res) => {
 
 
 app.post('/api/simulate-trip', async (req, res) => {
-  const { departureId, arrivalId, selectedCardId } = req.body;
+  const { departureId, arrivalId, selectedCardId, cardType } = req.body;
   try {
-    const tripData = await Db.simulateTrip(departureId, arrivalId, selectedCardId);
+    const tripData = await Db.simulateTrip(departureId, arrivalId, selectedCardId, cardType);
     res.json(tripData);
   } catch (error) {
     console.error('Errore durante la simulazione del viaggio:', error);
