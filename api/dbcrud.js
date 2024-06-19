@@ -12,6 +12,33 @@ async function reloadCardBalance(cardId, reloadAmount) {
   }
 }
 
+async function subscribeCard(cardId, zone) {
+  try {
+    const [rows] = await pool.execute(
+      `SELECT ABBONAMENTO.abbonamentoId
+       FROM ABBONAMENTO JOIN UNIQUE_CARD ON ABBONAMENTO.abbonamentoId = UNIQUE_CARD.abbonamentoId
+       WHERE UNIQUE_CARD.cardId = ?`,
+      [cardId]
+    );
+
+    if(rows[0].abbonamentoId != 1){
+      await pool.execute('UPDATE ABBONAMENTO SET scadenza = 2026-10-19 WHERE cardId = ?', [cardId]);
+    }
+
+    const [result] = await pool.execute(
+      `INSERT INTO ABBONAMENTO_ZONA (abbonamentoId, idZona)
+       VALUES (?, ?)`, [1, zone]);
+    const [result2] = await pool.execute(
+      `UPDATE UNIQUE_CARD
+       SET abbonamentoId = 1
+       WHERE cardId = ?`, [cardId]);
+    return "success";
+  } catch (error) {
+    console.error('Errore durante il controllo dell\'abbonamento:', error);
+    throw error;
+  }
+}
+
 async function hasValidSubscription(cardId, requiredZones) {
   try {
     const [rows] = await pool.execute(
@@ -569,5 +596,6 @@ module.exports = {
   getAverageCost,
   getMostUsedTransport,
   hasValidSubscription,
-  reloadCardBalance
+  reloadCardBalance,
+  subscribeCard
 };

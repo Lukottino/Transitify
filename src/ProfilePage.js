@@ -15,7 +15,8 @@ class ProfilePage extends Component {
       reloadAmount: 0,
       subscriptionZone: '',
       selectedCardId: '',
-      message: ''
+      message: '',
+      subscribeMessage: ''
     };
   }
 
@@ -82,10 +83,12 @@ class ProfilePage extends Component {
 
   handleSubscribe = async (cardId) => {
     try {
-      await axios.post(`http://localhost:3000/api/cards/${cardId}/subscribe`, { zone: this.state.subscriptionZone });
-      this.fetchCards(); // Refresh cards after subscribing
+      this.state.subscribeMessage = await axios.post(`http://localhost:3000/api/cards/${cardId}/subscribe`, { zone: this.state.subscriptionZone });
+      this.fetchCards();
+      this.setState({ subscribeMessage: `Abbonato alla zona ${this.state.subscriptionZone}!` });
     } catch (error) {
       console.error('Errore durante la sottoscrizione dell\'abbonamento:', error);
+      this.setState({ subscribeMessage: `Errore durante la sottoscrizione dell'abbonamento` });
     }
   };
 
@@ -94,7 +97,7 @@ class ProfilePage extends Component {
   };
 
   render() {
-    const { cards, topRoutes, averageCost, mostUsedTransport, reloadAmount, subscriptionZone, selectedCardId, message } = this.state;
+    const { cards, topRoutes, averageCost, mostUsedTransport, reloadAmount, subscriptionZone, selectedCardId, message, subscribeMessage } = this.state;
   
     return (
       <Container style={{ paddingTop: '100px' }}>
@@ -114,25 +117,26 @@ class ProfilePage extends Component {
               </Form.Control>
               {selectedCardId !== '' &&
                 <>
-                  <Form.Group>
+                  <Form.Group style={{ marginTop: '50px' }}>
                     <Form.Label>Importo da ricaricare</Form.Label>
                     <Form.Control
                       type="number"
                       value={reloadAmount}
                       onChange={this.handleReloadAmountChange}
                     />
-                    <Button onClick={() => this.handleReloadCard(selectedCardId)}>Ricarica Carta</Button>
+                    <Button style={{ marginTop: '10px' }} onClick={() => this.handleReloadCard(selectedCardId)}>Ricarica Carta</Button>
                   </Form.Group>
                   {message && <p style={{ color: message.includes('errore') || message.includes('Errore') ? 'red' : 'green' }}>{message}</p>} {/* Messaggio visibile */}
-                  <Form.Group>
+                  <Form.Group style={{ marginTop: '50px' }}>
                     <Form.Label>Zona per abbonamento</Form.Label>
                     <Form.Control
                       type="text"
                       value={subscriptionZone}
                       onChange={this.handleSubscriptionZoneChange}
                     />
-                    <Button onClick={() => this.handleSubscribe(selectedCardId)}>Sottoscrivi Abbonamento</Button>
+                    <Button style={{ marginTop: '10px' }} onClick={() => this.handleSubscribe(selectedCardId)}>Sottoscrivi Abbonamento</Button>
                   </Form.Group>
+                  {subscribeMessage && <p style={{ color: subscribeMessage.includes('errore') || subscribeMessage.includes('Errore') ? 'red' : 'green' }}>{subscribeMessage}</p>} {/* Messaggio visibile */}
                 </>
               }
             </Form.Group>

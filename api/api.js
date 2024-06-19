@@ -21,6 +21,18 @@ app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
 
+app.post('/api/cards/:cardId/subscribe', async (req, res) => {
+  try {
+    const cardId = req.params.cardId;
+    const zone = req.body.zone;
+    console.log(zone)
+    const result = await Db.subscribeCard(cardId, zone);
+    res.json(result);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 app.put('/api/cards/:cardId/reload', async (req, res) => {
   try {
     const cardId = req.params.cardId;

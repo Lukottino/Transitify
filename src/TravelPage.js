@@ -194,7 +194,7 @@ class TravelPage extends Component {
           <Col md={3}>
             <Form.Group controlId="sharedCard">
               <Form.Label>Numero Carta</Form.Label>
-              <Form.Control type="text" value={this.state.selectedSharedCardId} onChange={this.handleSharedCardChange} placeholder="Numero della carta shared" />
+              <Form.Control type="text" value={this.state.selectedSharedCardId} onChange={this.handleSharedCardChange} placeholder="Numero della carta" />
             </Form.Group>
           </Col>
         </Row>
