@@ -8,18 +8,33 @@ class AdminPage extends Component {
         this.state = {
             clients: [],
             accounts: [],
+            cards: [],
             showModal: false,
             currentClient: { clienteId: "", nome: "", cognome: "", email: "" },
             currentAccount: { accountId: "", accountName: "", accountSurname: "", accountEmail: "", accountPassword: "" },
+            currentCard: {cardId: "", saldo: "", idCliente: ""},
             isEditing: false,
-            entityType: 'client'
+            entityType: 'client',
         }
     }
 
     componentDidMount() {
         this.fetchClients();
         this.fetchAccounts();
+        this.fetchCards();
     }
+
+    fetchCards = () => {
+        axios.get('http://localhost:3000/api/cards')
+            .then(res => {
+                console.log(res)
+                this.setState({ cards: res.data });
+            })
+            .catch(error => {
+                console.error("There was an error fetching the cards!", error);
+            });
+    }
+
 
     fetchClients = () => {
         axios.get('http://localhost:3000/api/clienti')
@@ -48,6 +63,8 @@ class AdminPage extends Component {
             this.setState({ currentClient: entity });
         } else if (entityType === 'account') {
             this.setState({ currentAccount: entity });
+        } else if (entityType === 'card') {
+            this.setState({ currentCard: entity })
         }
     }
 
@@ -71,12 +88,19 @@ class AdminPage extends Component {
                     [name]: value
                 }
             }));
+        } else if (this.state.entityType === 'card') {
+            this.setState(prevState => ({
+                currentCard: {
+                    ...prevState.currentCard,
+                    [name]: value
+                }
+            }));
         }
     }
 
     handleSubmit = (e) => {
         e.preventDefault();
-        const { currentClient, currentAccount, isEditing, entityType } = this.state;
+        const { currentClient, currentAccount, currentCard, isEditing, entityType } = this.state;
 
         if (entityType === 'client') {
             if (isEditing) {
@@ -118,6 +142,26 @@ class AdminPage extends Component {
                         console.error("There was an error creating the account!", error);
                     });
             }
+        } else if (entityType === 'card') {
+            if (isEditing) {
+                axios.put(`http://localhost:3000/api/cards/${currentCard.cardId}`, currentCard)
+                    .then(res => {
+                        this.fetchCards();
+                        this.handleCloseModal();
+                    })
+                    .catch(error => {
+                        console.error("There was an error updating the card!", error);
+                    });
+            } else {
+                axios.post('http://localhost:3000/api/cards', currentCard)
+                    .then(res => {
+                        this.fetchCards();
+                        this.handleCloseModal();
+                    })
+                    .catch(error => {
+                        console.error("There was an error creating the card!", error);
+                    });
+            }
         }
     }
 
@@ -147,7 +191,7 @@ class AdminPage extends Component {
     }
 
     render(){
-        const { clients, accounts, showModal, currentClient, currentAccount, isEditing, entityType } = this.state;
+        const { clients, accounts, showModal, currentClient, currentAccount, currentCard, isEditing, entityType, cards } = this.state;
 
         return(
             <>
@@ -161,7 +205,7 @@ class AdminPage extends Component {
                             Add New Account
                         </Button>
                     </div>
-
+                    <h2 style={{ marginTop: "10px" }}>Clienti</h2>
                     <Table striped bordered hover className="mt-3">
                         <thead>
                             <tr>
@@ -187,6 +231,7 @@ class AdminPage extends Component {
                             ))}
                         </tbody>
                     </Table>
+                    <h2>Account</h2>
                     <Table striped bordered hover className="mt-3">
                         <thead>
                             <tr>
@@ -209,6 +254,30 @@ class AdminPage extends Component {
                                     <td>
                                         <Button variant="warning" onClick={() => this.handleShowModal(entity, "account", true)}>Edit</Button>{' '}
                                         <Button variant="danger" onClick={() => this.handleDelete(entity.idAccount, "account")}>Delete</Button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </Table>
+                    <h2>Carte</h2>
+                    <Table striped bordered hover className="mt-3">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Saldo</th>
+                                <th>Id Cliente</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {cards.map(entity => (
+                                <tr key={entity.cardId}>
+                                    <td>{entity.cardId}</td>
+                                    <td>{entity.saldo}</td>
+                                    <td>{entity.idCliente}</td>
+                                    <td>
+                                        <Button variant="warning" onClick={() => this.handleShowModal(entity, "card", true)}>Edit</Button>{' '}
+                                        <Button variant="danger" onClick={() => this.handleDelete(entity.idCard, "card")}>Delete</Button>
                                     </td>
                                 </tr>
                             ))}
@@ -295,6 +364,30 @@ class AdminPage extends Component {
                                             placeholder="Password" 
                                             name="password"
                                             value={currentAccount.password}
+                                            onChange={this.handleChange} />
+                                    </Form.Group>
+                                </>
+                            )}
+
+                            {entityType === 'card' && (
+                                <>
+                                    <Form.Group className="mb-3" controlId="formNome">
+                                        <Form.Label>Saldo</Form.Label>
+                                        <Form.Control 
+                                            type="text" 
+                                            placeholder="Saldo" 
+                                            name="saldo"
+                                            value={currentCard.saldo}
+                                            onChange={this.handleChange} />
+                                    </Form.Group>
+
+                                    <Form.Group className="mb-3" controlId="formCognome">
+                                        <Form.Label>Id Cliente</Form.Label>
+                                        <Form.Control 
+                                            type="text" 
+                                            placeholder="idCliente" 
+                                            name="idCliente"
+                                            value={currentCard.idCliente}
                                             onChange={this.handleChange} />
                                     </Form.Group>
                                 </>

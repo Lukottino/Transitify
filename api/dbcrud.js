@@ -2,6 +2,17 @@ const pool = require('./dbconfig');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+async function getAllCards() {
+  try {
+    const [rows] = await pool.execute(
+      `SELECT * FROM CARD`
+    );
+    return rows;
+  } catch (error) {
+    console.error('Errore durante la richiesta delle carte:', error);
+  }
+}
+
 async function updateAccount(accountId, account) {
   try {
     const newPassword = await bcrypt.hash(account.password, 10)
@@ -146,6 +157,16 @@ async function getTopRoutes(accountId) {
     return rows;
   } catch (error) {
     console.error('Errore durante il recupero delle carte:', error);
+    throw error;
+  }
+}
+
+async function getCard(cardId) {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM CARD WHERE cardId = ?', [cardId]);
+    return rows;
+  } catch (error) {
+    console.error('Errore durante il recupero dei clienti:', error);
     throw error;
   }
 }
@@ -609,5 +630,7 @@ module.exports = {
   hasValidSubscription,
   reloadCardBalance,
   subscribeCard,
-  updateAccount
+  updateAccount,
+  getAllCards,
+  getCard
 };

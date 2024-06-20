@@ -102,6 +102,24 @@ app.get('/api/accounts', async (req, res) => {
   }
 });
 
+app.get('/api/card/:cardId', async (req, res) => {
+  try{
+    const card = await Db.getCard(req.params.cardId);
+    res.json(card);
+  }catch(error){
+    res.status(500).send(error);
+  }
+});
+
+app.get('/api/cards', async (req, res) => {
+  try{
+    const cards = await Db.getAllCards();
+    res.json(cards);
+  }catch(error){
+    res.status(500).send(error);
+  }
+});
+
 app.delete('/api/accounts/:id', async (req, res) => {
   try {
     const accountId = req.params.id;

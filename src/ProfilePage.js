@@ -11,12 +11,15 @@ class ProfilePage extends Component {
       averageCost: 0,
       mostUsedTransport: [],
       cards: [],
+      card: "",
       accountId: '',
       reloadAmount: 0,
       subscriptionZone: '',
-      selectedCardId: '',
+      selectedUniqueCardId: '',
+      selectedSharedCardId: '',
       message: '',
-      subscribeMessage: ''
+      subscribeMessage: '',
+      isUniqueSelected: ''
     };
   }
 
@@ -28,6 +31,16 @@ class ProfilePage extends Component {
         this.fetchStatistics();
       }
     );
+  }
+
+  fetchCard = async (cardId) => {
+    try {
+      const response = await axios.get(`http://localhost:3000/api/card/${cardId}`);
+      console.log("caltaResponse: ", response.data[0])
+      this.setState({ card: response.data[0] });
+    } catch (error) {
+      console.error('Errore durante il recupero della carta:', error);
+    }
   }
 
   fetchCards = async () => {
@@ -66,13 +79,21 @@ class ProfilePage extends Component {
 
   handleReloadCard = async (cardId) => {
     try {
-      const selectedCard = this.state.cards.find(card => card.cardId === this.state.selectedCardId);
+      let selectedCard = '';
+      console.log("is unique selected: ", this.state.isUniqueSelected)
+      if(this.state.isUniqueSelected) {
+        selectedCard = this.state.cards.find(card => card.cardId === this.state.selectedUniqueCardId);
+      }else {
+        selectedCard = this.state.card;
+      }
       const newBalance = parseFloat(selectedCard.saldo.replace(',', '.')) + parseFloat(this.state.reloadAmount);
+      console.log(this.state.reloadAmount)
       if(parseFloat(this.state.reloadAmount) < 1) {
         throw new Error("Errore quantità errata.")
       }
       await axios.put(`http://localhost:3000/api/cards/${cardId}/reload`, { newBalance: newBalance });
       this.fetchCards(); // Refresh cards after reload
+      this.fetchCard(cardId);
       this.setState({ message: 'Ricarica completata con successo!' }); // Imposta il messaggio di successo
     } catch (error) {
       console.error('Errore durante la ricarica della carta:', error);
@@ -93,11 +114,19 @@ class ProfilePage extends Component {
   };
 
   handleCardChange = (e) => {
-    this.setState({ selectedCardId: parseInt(e.target.value, 10) });
+    this.setState({ selectedUniqueCardId: parseInt(e.target.value, 10) });
+    this.setState({ isUniqueSelected: true })
+  };
+
+  handleSharedCardChange = (e) => {
+    console.log(parseInt(e.target.value))
+    this.setState({ selectedSharedCardId: parseInt(e.target.value) });
+    this.setState({ isUniqueSelected: false });
+    this.fetchCard(e.target.value);
   };
 
   render() {
-    const { cards, topRoutes, averageCost, mostUsedTransport, reloadAmount, subscriptionZone, selectedCardId, message, subscribeMessage } = this.state;
+    const { cards, topRoutes, averageCost, mostUsedTransport, reloadAmount, subscriptionZone, selectedUniqueCardId, selectedSharedCardId, message, subscribeMessage, isUniqueSelected } = this.state;
   
     return (
       <Container style={{ paddingTop: '100px' }}>
@@ -107,7 +136,7 @@ class ProfilePage extends Component {
             <h3>Le tue carte</h3>
             <Form.Group controlId="cards">
               <Form.Label>Carte</Form.Label>
-              <Form.Control as="select" value={selectedCardId} onChange={this.handleCardChange}>
+              <Form.Control as="select" value={selectedUniqueCardId} onChange={this.handleCardChange}>
                 <option value="">Seleziona una carta</option>
                 {cards.map((card) => (
                   <option key={card.cardId} value={card.cardId}>
@@ -115,7 +144,11 @@ class ProfilePage extends Component {
                   </option>
                 ))}
               </Form.Control>
-              {selectedCardId !== '' &&
+              <Form.Group controlId="sharedCard">
+                <Form.Label>Numero Carta</Form.Label>
+                <Form.Control type="text" value={selectedSharedCardId} onChange={this.handleSharedCardChange} placeholder="Numero della carta" />
+              </Form.Group>
+              {(selectedUniqueCardId !== '' || selectedSharedCardId !== '') &&
                 <>
                   <Form.Group style={{ marginTop: '50px' }}>
                     <Form.Label>Importo da ricaricare</Form.Label>
@@ -124,7 +157,7 @@ class ProfilePage extends Component {
                       value={reloadAmount}
                       onChange={this.handleReloadAmountChange}
                     />
-                    <Button style={{ marginTop: '10px' }} onClick={() => this.handleReloadCard(selectedCardId)}>Ricarica Carta</Button>
+                    <Button style={{ marginTop: '10px' }} onClick={() => this.handleReloadCard(isUniqueSelected ? selectedUniqueCardId : selectedSharedCardId)} >Ricarica Carta</Button>
                   </Form.Group>
                   {message && <p style={{ color: message.includes('errore') || message.includes('Errore') ? 'red' : 'green' }}>{message}</p>} {/* Messaggio visibile */}
                   <Form.Group style={{ marginTop: '50px' }}>
@@ -134,7 +167,7 @@ class ProfilePage extends Component {
                       value={subscriptionZone}
                       onChange={this.handleSubscriptionZoneChange}
                     />
-                    <Button style={{ marginTop: '10px' }} onClick={() => this.handleSubscribe(selectedCardId)}>Sottoscrivi Abbonamento</Button>
+                    <Button style={{ marginTop: '10px' }} onClick={() => this.handleSubscribe(selectedUniqueCardId)}>Sottoscrivi Abbonamento</Button>
                   </Form.Group>
                   {subscribeMessage && <p style={{ color: subscribeMessage.includes('errore') || subscribeMessage.includes('Errore') ? 'red' : 'green' }}>{subscribeMessage}</p>} {/* Messaggio visibile */}
                 </>

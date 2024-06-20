@@ -8,6 +8,7 @@ import './Navbar.css';
 function CustomNavbar() {
     let navigate = useNavigate(); 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const accountType = localStorage.getItem("type");
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -50,8 +51,10 @@ function CustomNavbar() {
                         <Col xs="auto">
                             {isAuthenticated ? (
                                 <>
-                                    <Button onClick={handleLogout} className="custom-button">Logout</Button>
-                                    <Button onClick={() => routeChange("/profile")} className="custom-button" style={{ marginLeft: "10px" }}>Profile</Button>
+                                    <Button onClick={() => routeChange("/trip")} className="custom-button" style={{ marginLeft: "10px" }}>Viaggia</Button>
+                                    <Button onClick={() => routeChange("/profile")} className="custom-button" style={{ marginLeft: "10px" }}>Profilo</Button>
+                                    {accountType === "ADMIN" && <Button onClick={() => routeChange("/administration")} className="custom-button" style={{ marginLeft: "10px" }}>Admin</Button>}
+                                    <Button onClick={handleLogout} className="custom-button-logout" style={{ marginLeft: "10px" }}>Logout</Button>
                                 </>
                             ) : (
                                 <Button onClick={() => routeChange("/login")} className="custom-button">Login</Button>

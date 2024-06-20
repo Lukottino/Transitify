@@ -10,6 +10,20 @@
     border-radius: 15px !important; /* Bordo arrotondato */
 }
 
+.custom-button-logout {
+    color: white !important; /* Colore del testo bianco */
+    background-color: transparent !important;
+    border-color: #ffffff !important;
+    border-radius: 15px !important; /* Bordo arrotondato */
+}
+
+.custom-button-logout:hover {
+    color: rgb(202, 202, 202) !important; /* Colore del testo bianco */
+    background-color: transparent !important;
+    border-color: rgb(202, 202, 202) !important;
+    border-radius: 15px !important; /* Bordo arrotondato */
+}
+
 .custom-button:hover {
     background-color: #0056b3 !important; /* Colore di sfondo blu scuro al passaggio del mouse */
     border-color: #0056b3 !important; /* Colore del bordo blu scuro al passaggio del mouse */
