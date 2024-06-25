@@ -262,14 +262,6 @@ class AdminPage extends Component {
             <>
                 <div className="container mt-5" style={{ paddingTop: "30px" }}>
                     <h1>Admin Page</h1>
-                    <div>
-                        <Button variant="primary" onClick={() => this.handleShowModal({ entityType: 'client' })}>
-                            Add New Client
-                        </Button>
-                        <Button variant="primary" className="ms-3" onClick={() => this.handleShowModal({ entityType: 'account' })}>
-                            Add New Account
-                        </Button>
-                    </div>
                     <h2 style={{ marginTop: "10px" }}>Clienti</h2>
                     <Table striped bordered hover className="mt-3">
                         <thead>

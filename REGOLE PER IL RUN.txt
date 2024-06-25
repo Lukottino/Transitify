@@ -1,0 +1,13 @@
+cd src && npm install react react-bootstrap axios bootstrap react-router-dom @mui/material react-dom && cd ../api && npm install express nodemon dotenv cors mysql2
+
+poi:
+
+nella directory /api/:
+npm start
+
+e infine nella directory /src/:
+npm start
+
+chiederà sicuramente di cambiare la porta, si dovrà cliccare Y.
+
+Su mysql importare il file .sql e se necessario cambiare la password di accesso al database nel file ".env"
