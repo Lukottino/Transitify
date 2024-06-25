@@ -9,10 +9,12 @@ class AdminPage extends Component {
             clients: [],
             accounts: [],
             cards: [],
+            complaints: [],
             showModal: false,
             currentClient: { clienteId: "", nome: "", cognome: "", email: "" },
             currentAccount: { accountId: "", accountName: "", accountSurname: "", accountEmail: "", accountPassword: "" },
             currentCard: {cardId: "", saldo: "", idCliente: ""},
+            currentComplaint: {complaintId: "", message: "", cardId: ""},
             isEditing: false,
             entityType: 'client',
         }
@@ -22,6 +24,18 @@ class AdminPage extends Component {
         this.fetchClients();
         this.fetchAccounts();
         this.fetchCards();
+        this.fetchComplaints();
+    }
+
+    fetchComplaints = () => {
+        axios.get('http://localhost:3000/api/complaints')
+            .then(res => {
+                console.log(res)
+                this.setState({ complaints: res.data });
+            })
+            .catch(error => {
+                console.error("There was an error fetching the complaints!", error);
+            });
     }
 
     fetchCards = () => {
@@ -65,6 +79,8 @@ class AdminPage extends Component {
             this.setState({ currentAccount: entity });
         } else if (entityType === 'card') {
             this.setState({ currentCard: entity })
+        } else if (entityType === 'complaints') {
+            this.setState({ currentComplaint: entity })
         }
     }
 
@@ -95,8 +111,48 @@ class AdminPage extends Component {
                     [name]: value
                 }
             }));
+        } else if (this.state.entityType === 'complaint') {
+            this.setState(prevState => ({
+                currentCard: {
+                    ...prevState.currentComplaint,
+                    [name]: value
+                }
+            }));
         }
     }
+
+    handleRefund = (idReclamo, cardId, idViaggio) => {
+        axios.get(`http://localhost:3000/api/trip/${idViaggio}`)
+            .then(res => {
+                const viaggio = res.data[0];
+                console.log("viaggio:", viaggio);
+    
+                let card = this.state.cards.find(c => c.cardId === cardId);
+    
+                if (!card) {
+                    console.error("Card not found");
+                    return;
+                }
+                const newBalance =  parseFloat(card.saldo.replace(',', '.')) + parseFloat(viaggio.prezzo);
+    
+                console.log(newBalance);
+    
+                axios.put(`http://localhost:3000/api/cards/${cardId}/reload`, { newBalance: newBalance })
+                    .then(res => {
+                        this.handleDelete(idReclamo, "reclamo");
+                        this.fetchCards();
+                        this.fetchComplaints();
+                        this.handleCloseModal();
+                    })
+                    .catch(error => {
+                        console.error("There was an error updating the card!", error);
+                    });
+            })
+            .catch(error => {
+                console.error("There was an error fetching the trip!", error);
+            });
+    }
+    
 
     handleSubmit = (e) => {
         e.preventDefault();
@@ -183,6 +239,15 @@ class AdminPage extends Component {
                 .catch(error => {
                     console.error("There was an error deleting the account!", error);
                 });
+        } else if (entityType === 'reclamo') {
+            console.log(entityId)
+            axios.delete(`http://localhost:3000/api/complaint/${entityId}`)
+                .then(res => {
+                    this.fetchComplaints();
+                })
+                .catch(error => {
+                    console.error("There was an error deleting the complaint!", error);
+                });
         }
     }
 
@@ -191,7 +256,7 @@ class AdminPage extends Component {
     }
 
     render(){
-        const { clients, accounts, showModal, currentClient, currentAccount, currentCard, isEditing, entityType, cards } = this.state;
+        const { clients, accounts, showModal, currentClient, currentAccount, currentCard, isEditing, entityType, cards, complaints } = this.state;
 
         return(
             <>
@@ -278,6 +343,32 @@ class AdminPage extends Component {
                                     <td>
                                         <Button variant="warning" onClick={() => this.handleShowModal(entity, "card", true)}>Edit</Button>{' '}
                                         <Button variant="danger" onClick={() => this.handleDelete(entity.idCard, "card")}>Delete</Button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </Table>
+                    <h2>Reclami</h2>
+                    <Table striped bordered hover className="mt-3">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Messaggio</th>
+                                <th>CardId</th>
+                                <th>idViaggio</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {complaints.map(entity => (
+                                <tr key={entity.idReclamo}>
+                                    <td>{entity.idReclamo}</td>
+                                    <td>{entity.messaggio}</td>
+                                    <td>{entity.cardId}</td>
+                                    <td>{entity.idViaggio}</td>
+                                    <td>
+                                        <Button variant="warning" onClick={() => this.handleRefund(entity.idReclamo, entity.cardId, entity.idViaggio)}>Rimborsa</Button>{' '}
+                                        <Button variant="danger" onClick={() => this.handleDelete(entity.idReclamo, "reclamo")}>Delete</Button>
                                     </td>
                                 </tr>
                             ))}

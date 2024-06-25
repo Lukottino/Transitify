@@ -31,8 +31,8 @@ function App() {
             <Route path='/login' element={<Login handleLoginSuccess={handleLoginSuccess} />} />
             <Route path='/register' element={<Register handleLoginSuccess={handleLoginSuccess} />} />
             <Route path='/trip' element={<RedirectRoute><TravelPage /></RedirectRoute>} />
-            <Route path='/administration' element={<AdminPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
+            <Route path='/administration' element={<RedirectRoute><AdminPage /></RedirectRoute>} />
+            <Route path="/profile" element={<RedirectRoute><ProfilePage /></RedirectRoute>} />
           </Routes>
         </div>
       </Router>

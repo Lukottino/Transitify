@@ -2,6 +2,40 @@ const pool = require('./dbconfig');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+async function getTrips() {
+  try {
+    const [rows] = await pool.execute(
+      `SELECT * FROM VIAGGIO`
+    );
+    return rows;
+  } catch (error) {
+    console.error('Errore durante la richiesta dei viaggi:', error);
+  }
+}
+
+async function getTrip(idViaggio) {
+  try {
+    const [rows] = await pool.execute(
+      `SELECT * FROM VIAGGIO WHERE idViaggio = ?`, [idViaggio]
+    );
+    return rows;
+  } catch (error) {
+    console.error('Errore durante la richiesta dei viaggi:', error);
+  }
+}
+
+async function getComplaints() {
+  try {
+    const [rows] = await pool.execute(
+      `SELECT * FROM RECLAMO`
+    );
+    console.log(rows)
+    return rows;
+  } catch (error) {
+    console.error('Errore durante la richiesta dei reclami:', error);
+  }
+}
+
 async function getAllCards() {
   try {
     const [rows] = await pool.execute(
@@ -43,23 +77,44 @@ async function subscribeCard(cardId, zone) {
       [cardId]
     );
 
-    if(rows[0].abbonamentoId != 1){
-      await pool.execute('UPDATE ABBONAMENTO SET scadenza = 2026-10-19 WHERE cardId = ?', [cardId]);
+    let abbonamentoId = null;
+
+    if (rows.length > 0) {
+      abbonamentoId = rows[0].abbonamentoId;
     }
 
-    const [result] = await pool.execute(
-      `INSERT INTO ABBONAMENTO_ZONA (abbonamentoId, idZona)
-       VALUES (?, ?)`, [1, zone]);
-    const [result2] = await pool.execute(
-      `UPDATE UNIQUE_CARD
-       SET abbonamentoId = 1
-       WHERE cardId = ?`, [cardId]);
+    if (abbonamentoId && abbonamentoId !== 1) {
+      await pool.execute(
+        'UPDATE ABBONAMENTO SET scadenza = "2026-10-19" WHERE abbonamentoId = ?',
+        [abbonamentoId]
+      );
+    } else {
+      const [insertAbbonamentoResult] = await pool.execute(
+        `INSERT INTO ABBONAMENTO (scadenza) VALUES ("2026-10-19")`
+      );
+      abbonamentoId = insertAbbonamentoResult.insertId;
+
+      await pool.execute(
+        `INSERT INTO ABBONAMENTO_ZONA (abbonamentoId, idZona)
+         VALUES (?, ?)`,
+        [abbonamentoId, zone]
+      );
+
+      await pool.execute(
+        `UPDATE UNIQUE_CARD
+         SET abbonamentoId = ?
+         WHERE cardId = ?`,
+        [abbonamentoId, cardId]
+      );
+    }
+
     return "success";
   } catch (error) {
     console.error('Errore durante il controllo dell\'abbonamento:', error);
     throw error;
   }
 }
+
 
 async function hasValidSubscription(cardId, requiredZones) {
   try {
@@ -561,6 +616,63 @@ async function getUniqueCards(accountId) {
   }
 }
 
+async function createCard(type, info) {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    let idCliente;
+
+    // Controlla se il cliente esiste già
+    const [existingClient] = await connection.execute(
+      'SELECT idCliente FROM CLIENTE WHERE email = ?',
+      [info.email]
+    );
+
+    if (existingClient.length > 0) {
+      idCliente = existingClient[0].idCliente;
+    } else {
+      // Creazione del cliente
+      const [clienteResult] = await connection.execute(
+        'INSERT INTO CLIENTE (nome, cognome, email) VALUES (?, ?, ?)',
+        [info.nome, info.cognome, info.email]
+      );
+      idCliente = clienteResult.insertId;
+    }
+
+    // Inserimento della carta
+    const [cardResult] = await connection.execute(
+      'INSERT INTO CARD (saldo, idCliente) VALUES (?, ?)',
+      [0, idCliente] // Saldo iniziale 0
+    );
+    const cardId = cardResult.insertId;
+
+    // Se è una carta unica, collegala all'account
+    if (type === 'UNIQUE') {
+      await connection.execute(
+        'INSERT INTO UNIQUE_CARD (cardId, idAccount) VALUES (?, ?)',
+        [cardId, info.accountId]
+      );
+    } else {
+      // Inserimento carta condivisa
+      await connection.execute(
+        'INSERT INTO SHARED_CARD (cardId) VALUES (?)',
+        [cardId]
+      );
+    }
+
+    await connection.commit();
+    return { message: 'Carta creata con successo' };
+  } catch (error) {
+    await connection.rollback();
+    console.error('Errore durante la creazione della carta:', error);
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+
 async function postLogin(email, password, callback) {
   try {
     console.log('Email e password ricevuti:', email, password);
@@ -610,6 +722,32 @@ async function postLogin(email, password, callback) {
   }
 }
 
+async function createComplaint(cardId, messaggio, idViaggio) {
+  try {
+    const [result] = await pool.execute(
+      `INSERT INTO RECLAMO (messaggio, cardId, idViaggio) VALUES (?, ?, ?)`,
+      [messaggio, cardId, idViaggio]
+    );
+    return { success: true, reclamoId: result.insertId };
+  } catch (error) {
+    console.error('Errore durante la creazione del reclamo:', error);
+    throw error;
+  }
+}
+
+async function deleteComplaint(complaintId) {
+  try {
+    const [result] = await pool.execute(
+      `DELETE FROM RECLAMO WHERE idReclamo = ?`,
+      [complaintId]
+    );
+    return { success: true, reclamoId: result.insertId };
+  } catch (error) {
+    console.error('Errore durante la rimozione del reclamo:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   getAccount,
   postLogin,
@@ -632,5 +770,11 @@ module.exports = {
   subscribeCard,
   updateAccount,
   getAllCards,
-  getCard
+  getCard,
+  createCard,
+  createComplaint,
+  deleteComplaint,
+  getTrips,
+  getTrip,
+  getComplaints
 };

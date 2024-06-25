@@ -28,6 +28,7 @@ function CustomNavbar() {
         setIsAuthenticated(false);
         localStorage.removeItem('token');
         localStorage.removeItem('accountId');
+        localStorage.removeItem('type')
         routeChange("/")
     };
 

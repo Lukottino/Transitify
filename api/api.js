@@ -33,15 +33,26 @@ app.post('/api/cards/:cardId/subscribe', async (req, res) => {
   }
 });
 
-app.put('/api/accounts/:accountId', async (req, res) => {
+app.post('/api/card/:type/buy', async (req, res) => {
   try {
-    console.log("ACCOUNTID: ", req.params.accountId)
-    const accountId = req.params.accountId;
-    const account = req.body;
-    const result = await Db.updateAccount(accountId, account);
+    const type = req.params.type;
+    const info = req.body;
+    const result = await Db.createCard(type, info);
     res.json(result);
   } catch (error) {
     res.status(500).send(error);
+  }
+});
+
+app.post('/api/complaint', async (req, res) => {
+  try {
+    const { cardId, messaggio, trip } = req.body;
+    console.log(cardId, messaggio, trip)
+    const result = await Db.createComplaint(cardId, messaggio, trip);
+    res.json(result);
+  } catch (error) {
+    console.error('Errore durante l\'invio del reclamo:', error);
+    res.status(500).send('Errore durante l\'invio del reclamo.');
   }
 });
 
@@ -52,6 +63,33 @@ app.put('/api/cards/:cardId/reload', async (req, res) => {
     console.log(reloadAmount)
     const result = await Db.reloadCardBalance(cardId, reloadAmount);
     res.json(result);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+app.get('/api/complaints', async (req, res) => {
+  try {
+    const complaints = await Db.getComplaints();
+    res.json(complaints);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+app.get('/api/trip/:id', async (req, res) => {
+  try {
+    const trip = await Db.getTrip(req.params.id);
+    res.json(trip);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+app.get('/api/trips', async (req, res) => {
+  try {
+    const trips = await Db.getTrips();
+    res.json(trips);
   } catch (error) {
     res.status(500).send(error);
   }
@@ -154,6 +192,16 @@ app.put('/api/clienti/:id', async (req, res) => {
     const clientId = req.params.id;
     const updatedClient = req.body;
     const result = await Db.updateClient(clientId, updatedClient);
+    res.json(result);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+app.delete('/api/complaint/:id', async (req, res) => {
+  try {
+    const complaintId = req.params.id;
+    const result = await Db.deleteComplaint(complaintId);
     res.json(result);
   } catch (error) {
     res.status(500).send(error);
